@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:mark4/components/current_time.dart';
 import 'package:mark4/run_test.dart';
@@ -38,7 +40,9 @@ class Home extends StatelessWidget {
           ),
           actions: [
             InkWell(
-              onTap: () {},
+              onTap: () {
+                _showPowerPopup(context);
+              },
               child: Image.asset('images/powerButton.png', scale: 7),
             ),
             const SizedBox(width: 15),
@@ -210,6 +214,97 @@ class Home extends StatelessWidget {
                   ),
                 ),
               ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _showPowerPopup(BuildContext context) {
+    showDialog(
+      context: context,
+      barrierDismissible: true,
+      builder: (context) {
+        return Dialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: Container(
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(16),
+              color: Colors.white,
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Text(
+                  "System Control",
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFF1A2A4A),
+                  ),
+                ),
+                const SizedBox(height: 20),
+
+                // 종료 버튼
+                _powerBtn(
+                  text: "Shutdown",
+                  color: const Color(0xFFE83C3C),
+                  onTap: () {
+                    Process.run('shutdown', ['-h', 'now']);
+                  },
+                ),
+                const SizedBox(height: 12),
+
+                // 재시작 버튼
+                _powerBtn(
+                  text: "Restart",
+                  color: const Color(0xFF227BFF),
+                  onTap: () {
+                    Process.run('reboot', []);
+                  },
+                ),
+                const SizedBox(height: 12),
+
+                // 취소 버튼
+                _powerBtn(
+                  text: "Cancel",
+                  color: const Color(0xFF6D6D6D),
+                  onTap: () {
+                    Navigator.pop(context);
+                  },
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _powerBtn({
+    required String text,
+    required Color color,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        height: 50,
+        decoration: BoxDecoration(
+          color: color,
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Center(
+          child: Text(
+            text,
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 16,
+              fontWeight: FontWeight.w600,
             ),
           ),
         ),
