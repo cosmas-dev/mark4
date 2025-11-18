@@ -254,7 +254,7 @@ class _PreparingPageState extends State<PreparingPage> {
         const Text("• If the test is completed from outside, press"),
         const SizedBox(height: 12),
         const Text(
-          "• If you want the test time to be completed\n. within the Reader, press",
+          "• If you want the test time to be completed\n  within the Reader, press",
         ),
       ],
     );
