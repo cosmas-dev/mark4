@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:mark4/home.dart';
@@ -7,14 +9,19 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await initializeDateFormatting('ko_KR', null); // 로케일 초기화
 
-  await windowManager.ensureInitialized();
+  if (!Platform.isAndroid && !Platform.isIOS) {
+    // 데스크탑 플랫폼에서만 윈도우 매니저 초기화
+    await windowManager.ensureInitialized();
 
-  WindowOptions windowOptions = const WindowOptions(fullScreen: true);
+    const windowOptions = WindowOptions(fullScreen: true);
 
-  windowManager.waitUntilReadyToShow(windowOptions, () async {
-    await windowManager.setFullScreen(true);
-    await windowManager.show();
-  });
+    windowManager.waitUntilReadyToShow(windowOptions, () async {
+      // await windowManager.setFullScreen(true);
+      await windowManager.show();
+      await windowManager.focus();
+    });
+  }
+
   runApp(const MyApp());
 }
 
