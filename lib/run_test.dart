@@ -1,5 +1,6 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:mark4/preparing.dart';
 
 class RunTest extends StatefulWidget {
   const RunTest({super.key});
@@ -29,46 +30,52 @@ class _RunTestState extends State<RunTest> {
   Widget build(BuildContext context) {
     final now = DateTime.now();
 
-    return Stack(
-      children: [
-        // 본 화면
-        Scaffold(
-          backgroundColor: const Color(0xFFEFF3F8),
-          body: SafeArea(
-            child: Column(
-              children: [
-                _topBar(now),
-                const SizedBox(height: 10),
-                Expanded(
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                    children: [
-                      _channel("images/kit3.png", "Kim"),
-                      _channel("images/kit2.png", "Ju"),
-                      _channel("images/kit1.png", "Sw"),
-                    ],
-                  ),
-                ),
-                const Padding(
-                  padding: EdgeInsets.only(bottom: 30),
-                  child: Text(
-                    "Idle",
-                    style: TextStyle(
-                      fontSize: 16,
-                      color: Color(0xFF1A2A4A),
-                      fontWeight: FontWeight.w600,
+    return GestureDetector(
+      onTap: () {
+        FocusScope.of(context).unfocus();
+      },
+      child: Stack(
+        children: [
+          // 본 화면
+          Scaffold(
+            // resizeToAvoidBottomInset: true,
+            backgroundColor: const Color(0xFFEFF3F8),
+            body: SafeArea(
+              child: Column(
+                children: [
+                  _topBar(now),
+                  const SizedBox(height: 10),
+                  Expanded(
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      children: [
+                        Image.asset("images/kit1.png", scale: 8),
+                        Image.asset("images/kit2.png", scale: 8),
+                        Image.asset("images/kit3.png", scale: 8),
+                      ],
                     ),
                   ),
-                ),
-                _bottomButtons(),
-              ],
+                  const Padding(
+                    padding: EdgeInsets.only(bottom: 30),
+                    child: Text(
+                      "Idle",
+                      style: TextStyle(
+                        fontSize: 16,
+                        color: Color(0xFF1A2A4A),
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                  _bottomButtons(),
+                ],
+              ),
             ),
           ),
-        ),
 
-        // 팝업 + 블러
-        if (showPopup) _popupOverlay(),
-      ],
+          // 팝업 + 블러
+          if (showPopup) _popupOverlay(),
+        ],
+      ),
     );
   }
 
@@ -110,26 +117,6 @@ class _RunTestState extends State<RunTest> {
           const Icon(Icons.home, size: 26, color: Color(0xFF1A2A4A)),
         ],
       ),
-    );
-  }
-
-  Widget _channel(String img, String label) {
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        Padding(
-          padding: const EdgeInsets.all(10),
-          child: Image.asset(img, scale: 8),
-        ),
-        Text(
-          label,
-          style: const TextStyle(
-            fontWeight: FontWeight.w600,
-            color: Color(0xFF1A2A4A),
-            fontSize: 14,
-          ),
-        ),
-      ],
     );
   }
 
@@ -201,11 +188,17 @@ class _RunTestState extends State<RunTest> {
 
   Widget _popupOverlay() {
     return Positioned.fill(
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
-        child: Container(
-          color: Colors.black.withOpacity(0.25),
-          child: Center(child: _popupContent()),
+      child: AnimatedPadding(
+        duration: const Duration(milliseconds: 50),
+        padding: EdgeInsets.only(
+          bottom: MediaQuery.of(context).viewInsets.bottom * 0.6,
+        ),
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
+          child: Container(
+            color: Colors.black.withOpacity(0.25),
+            child: Center(child: SingleChildScrollView(child: _popupContent())),
+          ),
         ),
       ),
     );
@@ -275,9 +268,35 @@ class _RunTestState extends State<RunTest> {
                     }),
                   ),
                   const SizedBox(width: 12),
-                  Expanded(child: _popupBtn("Reset", () {})),
+                  Expanded(
+                    child: _popupBtn("Reset", () {
+                      setState(() {
+                        // UserID 초기화
+                        for (var c in userIdController) {
+                          c.clear();
+                        }
+
+                        // Age 초기화
+                        for (var c in ageController) {
+                          c.clear();
+                        }
+
+                        // Gender 초기화
+                        gender = [null, null, null];
+                      });
+                    }),
+                  ),
                   const SizedBox(width: 12),
-                  Expanded(child: _popupBtn("Next", () {})),
+                  Expanded(
+                    child: _popupBtn("Next", () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => PreparingPage(),
+                        ),
+                      );
+                    }),
+                  ),
                 ],
               ),
             ),
@@ -291,7 +310,20 @@ class _RunTestState extends State<RunTest> {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        SizedBox(width: 50, child: Text("CH-${i + 1}")),
+        Column(
+          children: [
+            if (i == 0)
+              const Text(
+                "",
+                textAlign: TextAlign.center,
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+              ),
+            const SizedBox(height: 23),
+            Text("CH-${i + 1}"),
+          ],
+        ),
+        const SizedBox(width: 10),
+        // SizedBox(width: 50, child: Text("CH-${i + 1}")),
 
         // === User ID ===
         Expanded(
