@@ -1,10 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:mark4/home.dart';
+import 'package:window_manager/window_manager.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await initializeDateFormatting('ko_KR', null); // 로케일 초기화
+
+  await windowManager.ensureInitialized();
+
+  WindowOptions windowOptions = const WindowOptions(fullScreen: true);
+
+  windowManager.waitUntilReadyToShow(windowOptions, () async {
+    await windowManager.setFullScreen(true);
+    await windowManager.show();
+  });
   runApp(const MyApp());
 }
 
