@@ -92,38 +92,6 @@ class _ProgressPageState extends State<ProgressPage>
       ),
     );
   }
-
-  Widget _topBar() {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 10, 20, 10),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: const [
-          Icon(Icons.arrow_back, color: Color(0xFF1A2A4A), size: 26),
-          Row(
-            children: [
-              Icon(Icons.access_time, size: 20, color: Color(0xFF1A2A4A)),
-              SizedBox(width: 6),
-              Text(
-                "10:10",
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: Color(0xFF1A2A4A),
-                ),
-              ),
-              SizedBox(width: 12),
-              Text(
-                "2025. 10. 08. Wed.",
-                style: TextStyle(fontSize: 12, color: Color(0xFF1A2A4A)),
-              ),
-            ],
-          ),
-          Icon(Icons.home, color: Color(0xFF1A2A4A), size: 26),
-        ],
-      ),
-    );
-  }
 }
 
 // ---------- Custom Progress Ring Painter ----------

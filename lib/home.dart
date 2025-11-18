@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
+import 'package:mark4/components/current_time.dart';
 import 'package:mark4/run_test.dart';
 
 class Home extends StatelessWidget {
@@ -7,10 +7,6 @@ class Home extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final now = DateTime.now();
-    final time = DateFormat('HH:mm').format(now);
-    final date = DateFormat('yyyy. MM. dd. EEE', 'ko_KR').format(now);
-
     return Container(
       decoration: const BoxDecoration(
         gradient: LinearGradient(
@@ -21,54 +17,39 @@ class Home extends StatelessWidget {
       ),
       child: Scaffold(
         backgroundColor: Colors.transparent,
+        appBar: AppBar(
+          backgroundColor: Colors.transparent,
+          automaticallyImplyLeading: false,
+          title: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                getCurrentTime(),
+                style: const TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              Text(
+                getCurrentDate(),
+                style: const TextStyle(fontSize: 16, color: Colors.black54),
+              ),
+            ],
+          ),
+          actions: [
+            InkWell(
+              onTap: () {},
+              child: Image.asset('images/powerButton.png', scale: 7),
+            ),
+            const SizedBox(width: 15),
+          ],
+        ),
         body: SafeArea(
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // ---------------- 상단 날짜/시간 ----------------
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          children: [
-                            const Icon(
-                              Icons.access_time,
-                              size: 22,
-                              color: Colors.black87,
-                            ),
-                            const SizedBox(width: 6),
-                            Text(
-                              time,
-                              style: const TextStyle(
-                                fontSize: 22,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          date,
-                          style: const TextStyle(
-                            fontSize: 13,
-                            color: Colors.grey,
-                          ),
-                        ),
-                      ],
-                    ),
-                    const Icon(
-                      Icons.power_settings_new,
-                      size: 26,
-                      color: Colors.black87,
-                    ),
-                  ],
-                ),
-
                 const SizedBox(height: 40),
 
                 // ------------- RUN TEST + 하단 2개 버튼 -------------
@@ -89,7 +70,7 @@ class Home extends StatelessWidget {
                           ),
                           boxShadow: [
                             BoxShadow(
-                              color: Colors.black.withOpacity(0.08),
+                              color: Colors.black.withAlpha(20),
                               blurRadius: 8,
                               offset: const Offset(0, 4),
                             ),

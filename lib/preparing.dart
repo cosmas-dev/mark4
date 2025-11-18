@@ -1,6 +1,8 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:mark4/components/current_time.dart';
+import 'package:mark4/home.dart';
 import 'package:mark4/progress_page.dart';
 
 class PreparingPage extends StatefulWidget {
@@ -47,66 +49,83 @@ class _PreparingPageState extends State<PreparingPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFEFF3F8),
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        title: Text(
+          "     ${getCurrentTime()}     ${getCurrentDate()}",
+          style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+        ),
+        actions: [
+          InkWell(
+            onTap: () {
+              Navigator.pushAndRemoveUntil(
+                context,
+                MaterialPageRoute(builder: (context) => Home()),
+                (route) => false,
+              );
+            },
+            child: Image.asset('images/homeButton.png', scale: 8),
+          ),
+          const SizedBox(width: 15),
+        ],
+      ),
       body: SafeArea(
         child: Column(
           children: [
-            _topBar(),
-            SizedBox(height: MediaQuery.sizeOf(context).height * 0.06),
             Expanded(
-              child: SingleChildScrollView(
-                child: Center(
-                  child: Container(
-                    width: MediaQuery.sizeOf(context).width * 0.9,
-                    padding: const EdgeInsets.symmetric(
-                      vertical: 25,
-                      horizontal: 20,
-                    ),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(20),
-                      boxShadow: [
-                        BoxShadow(
-                          blurRadius: 10,
-                          color: Colors.black.withOpacity(0.08),
-                          offset: const Offset(0, 4),
-                        ),
-                      ],
-                    ),
-                    child: // ---------- 슬라이드 카드 영역 ----------
-                        SizedBox(
-                      height: 480,
-                      child: Column(
-                        children: [
-                          // -------- PageView --------
-                          Expanded(
-                            child: PageView(
-                              controller: pageController,
-                              onPageChanged: (i) {
-                                setState(() => currentPage = i);
-                              },
-                              children: [
-                                _imageGridPage1(),
-                                _imageGridPage2(),
-                                _imageGridPage3(),
-                              ],
-                            ),
-                          ),
-
-                          const SizedBox(height: 12),
-
-                          // -------- Indicator --------
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
+              child: Center(
+                child: Container(
+                  width: MediaQuery.sizeOf(context).width * 0.9,
+                  padding: const EdgeInsets.symmetric(
+                    vertical: 25,
+                    horizontal: 20,
+                  ),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(20),
+                    boxShadow: [
+                      BoxShadow(
+                        blurRadius: 10,
+                        // color: Colors.black.withOpacity(0.08),
+                        color: Colors.black.withAlpha(20),
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  child: // ---------- 슬라이드 카드 영역 ----------
+                      SizedBox(
+                    height: 480,
+                    child: Column(
+                      children: [
+                        // -------- PageView --------
+                        Expanded(
+                          child: PageView(
+                            controller: pageController,
+                            onPageChanged: (i) {
+                              setState(() => currentPage = i);
+                            },
                             children: [
-                              _dot(active: currentPage == 0),
-                              const SizedBox(width: 8),
-                              _dot(active: currentPage == 1),
-                              const SizedBox(width: 8),
-                              _dot(active: currentPage == 2),
+                              _imageGridPage1(),
+                              _imageGridPage2(),
+                              _imageGridPage3(),
                             ],
                           ),
-                        ],
-                      ),
+                        ),
+
+                        const SizedBox(height: 12),
+
+                        // -------- Indicator --------
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            _dot(active: currentPage == 0),
+                            const SizedBox(width: 8),
+                            _dot(active: currentPage == 1),
+                            const SizedBox(width: 8),
+                            _dot(active: currentPage == 2),
+                          ],
+                        ),
+                      ],
                     ),
                   ),
                 ),
@@ -116,41 +135,6 @@ class _PreparingPageState extends State<PreparingPage> {
             _bottomButtons(),
           ],
         ),
-      ),
-    );
-  }
-
-  // ====================== TOP BAR ======================
-  Widget _topBar() {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 8, 20, 8),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          const Icon(Icons.arrow_back, color: Color(0xFF1A2A4A), size: 26),
-
-          Row(
-            children: [
-              const Icon(Icons.access_time, size: 20, color: Color(0xFF1A2A4A)),
-              const SizedBox(width: 6),
-              const Text(
-                "10:10",
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: Color(0xFF1A2A4A),
-                ),
-              ),
-              const SizedBox(width: 12),
-              const Text(
-                "2025. 10. 08. Wed.",
-                style: TextStyle(fontSize: 12, color: Color(0xFF1A2A4A)),
-              ),
-            ],
-          ),
-
-          const Icon(Icons.home, size: 26, color: Color(0xFF1A2A4A)),
-        ],
       ),
     );
   }
@@ -304,7 +288,7 @@ class _PreparingPageState extends State<PreparingPage> {
 
   // ======================= BOTTOM BUTTONS =======================
   Widget _bottomButtons() {
-    return Container(
+    return SizedBox(
       height: 90,
       child: Row(
         children: [

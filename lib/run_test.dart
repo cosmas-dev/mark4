@@ -1,5 +1,6 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:mark4/components/current_time.dart';
 import 'package:mark4/preparing.dart';
 
 class RunTest extends StatefulWidget {
@@ -28,8 +29,6 @@ class _RunTestState extends State<RunTest> {
 
   @override
   Widget build(BuildContext context) {
-    final now = DateTime.now();
-
     return GestureDetector(
       onTap: () {
         FocusScope.of(context).unfocus();
@@ -38,12 +37,29 @@ class _RunTestState extends State<RunTest> {
         children: [
           // 본 화면
           Scaffold(
-            // resizeToAvoidBottomInset: true,
             backgroundColor: const Color(0xFFEFF3F8),
+            appBar: AppBar(
+              backgroundColor: Colors.transparent,
+              title: Text(
+                "     ${getCurrentTime()}     ${getCurrentDate()}",
+                style: const TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              actions: [
+                InkWell(
+                  onTap: () {
+                    Navigator.pop(context);
+                  },
+                  child: Image.asset('images/homeButton.png', scale: 8),
+                ),
+                const SizedBox(width: 15),
+              ],
+            ),
             body: SafeArea(
               child: Column(
                 children: [
-                  _topBar(now),
                   const SizedBox(height: 10),
                   Expanded(
                     child: Row(
@@ -80,45 +96,6 @@ class _RunTestState extends State<RunTest> {
   }
 
   // ========================== UI PARTS =============================
-
-  Widget _topBar(DateTime now) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          InkWell(
-            child: const Icon(
-              Icons.arrow_back,
-              size: 26,
-              color: Color(0xFF1A2A4A),
-            ),
-            onTap: () => Navigator.pop(context),
-          ),
-          Row(
-            children: [
-              const Icon(Icons.access_time, size: 20, color: Color(0xFF1A2A4A)),
-              const SizedBox(width: 6),
-              Text(
-                "${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')}",
-                style: const TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: Color(0xFF1A2A4A),
-                ),
-              ),
-              const SizedBox(width: 12),
-              Text(
-                "${now.year}.${now.month.toString().padLeft(2, '0')}.${now.day.toString().padLeft(2, '0')}. Wed.",
-                style: const TextStyle(fontSize: 12, color: Color(0xFF1A2A4A)),
-              ),
-            ],
-          ),
-          const Icon(Icons.home, size: 26, color: Color(0xFF1A2A4A)),
-        ],
-      ),
-    );
-  }
 
   Widget _bottomButtons() {
     return Container(
@@ -196,7 +173,7 @@ class _RunTestState extends State<RunTest> {
         child: BackdropFilter(
           filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
           child: Container(
-            color: Colors.black.withOpacity(0.25),
+            color: Colors.black.withAlpha(64),
             child: Center(child: SingleChildScrollView(child: _popupContent())),
           ),
         ),
@@ -289,6 +266,7 @@ class _RunTestState extends State<RunTest> {
                   const SizedBox(width: 12),
                   Expanded(
                     child: _popupBtn("Next", () {
+                      showPopup = false;
                       Navigator.push(
                         context,
                         MaterialPageRoute(
