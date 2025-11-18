@@ -16,7 +16,7 @@ void main() async {
     const windowOptions = WindowOptions(fullScreen: true);
 
     windowManager.waitUntilReadyToShow(windowOptions, () async {
-      // await windowManager.setFullScreen(true);
+      await windowManager.setFullScreen(true);
       await windowManager.show();
       await windowManager.focus();
     });
