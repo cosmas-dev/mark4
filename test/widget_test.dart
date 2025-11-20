@@ -1,30 +1,74 @@
-// This is a basic Flutter widget test.
-//
-// To perform an interaction with a widget in your test, use the WidgetTester
-// utility in the flutter_test package. For example, you can send tap and scroll
-// gestures. You can also use WidgetTester to find child widgets in the widget
-// tree, read text, and verify that the values of widget properties are correct.
-
-import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-
-import 'package:mark4/main.dart';
+import 'package:mark4/main.dart'; // ← 실제 앱 실행 파일 import
+import 'package:flutter/material.dart';
 
 void main() {
-  testWidgets('Counter increments smoke test', (WidgetTester tester) async {
-    // Build our app and trigger a frame.
+  testWidgets("RunTest Flow - Popup appears and inputs work", (tester) async {
+    // 앱 실행
     await tester.pumpWidget(const MyApp());
+    await tester.pumpAndSettle();
 
-    // Verify that our counter starts at 0.
-    expect(find.text('0'), findsOneWidget);
-    expect(find.text('1'), findsNothing);
+    // ========== 1. RUN TEST 화면 이동 ==========
+    final runTestButton = find.text("RUN TEST");
+    expect(runTestButton, findsOneWidget);
 
-    // Tap the '+' icon and trigger a frame.
-    await tester.tap(find.byIcon(Icons.add));
+    await tester.tap(runTestButton);
+    await tester.pumpAndSettle();
+
+    // ========== 2. Start 버튼 → 팝업 등장 ==========
+    final startButton = find.text("Start");
+    expect(startButton, findsOneWidget);
+
+    await tester.tap(startButton);
+    await tester.pumpAndSettle();
+
+    // 팝업 타이틀 확인
+    expect(find.text("Channel Information"), findsOneWidget);
+
+    // ========== 3. User ID 입력 ==========
+    final userIdField1 = find.byType(TextField).at(0);
+    expect(userIdField1, findsOneWidget);
+
+    await tester.enterText(userIdField1, "kim");
     await tester.pump();
 
-    // Verify that our counter has incremented.
-    expect(find.text('0'), findsNothing);
-    expect(find.text('1'), findsOneWidget);
+    final userIdField2 = find.byType(TextField).at(1);
+    await tester.enterText(userIdField2, "lee");
+
+    final userIdField3 = find.byType(TextField).at(2);
+    await tester.enterText(userIdField3, "choi");
+
+    await tester.pumpAndSettle();
+
+    // ========== 4. Age 입력 ==========
+    final ageField1 = find.byType(TextField).at(3);
+    await tester.enterText(ageField1, "25");
+
+    final ageField2 = find.byType(TextField).at(4);
+    await tester.enterText(ageField2, "33");
+
+    final ageField3 = find.byType(TextField).at(5);
+    await tester.enterText(ageField3, "41");
+
+    await tester.pumpAndSettle();
+
+    // ========== 5. Gender 선택 ==========
+    final femaleRadio = find.byType(Radio).at(1); // CH-1 Female
+    await tester.tap(femaleRadio);
+
+    await tester.pumpAndSettle();
+
+    // ========== 6. Next 버튼 눌러보기 ==========
+    final nextBtn = find.text("Next");
+    expect(nextBtn, findsOneWidget);
+
+    await tester.tap(nextBtn);
+    await tester.pumpAndSettle();
+
+    // next 눌러도 팝업 닫히진 않도록 되어 있으면 그대로 유지됨.
+    // 닫히는 걸 기대한다면 아래 주석을 반대로 바꿔야 함:
+    // expect(find.text("Channel Information"), findsNothing);
+
+    expect(find.text("Channel Information"), findsOneWidget);
   });
 }

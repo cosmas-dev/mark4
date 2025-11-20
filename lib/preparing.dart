@@ -70,10 +70,10 @@ class _PreparingPageState extends State<PreparingPage> {
         ],
       ),
       body: SafeArea(
-        child: Column(
-          children: [
-            Expanded(
-              child: Center(
+        child: SingleChildScrollView(
+          child: Column(
+            children: [
+              Center(
                 child: Container(
                   width: MediaQuery.sizeOf(context).width * 0.9,
                   padding: const EdgeInsets.symmetric(
@@ -130,10 +130,10 @@ class _PreparingPageState extends State<PreparingPage> {
                   ),
                 ),
               ),
-            ),
 
-            _bottomButtons(),
-          ],
+              _bottomButtons(),
+            ],
+          ),
         ),
       ),
     );

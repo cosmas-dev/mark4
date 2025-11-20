@@ -373,20 +373,22 @@ class _RunTestState extends State<RunTest> {
               children: [
                 Column(
                   children: [
-                    Radio(
+                    Radio<int?>(
+                      key: Key("gender_${i}_male"), // ★ 여기에 key 추가
                       value: 0,
                       groupValue: gender[i],
-                      onChanged: (v) => setState(() => gender[i] = v!),
+                      onChanged: (v) => setState(() => gender[i] = v),
                     ),
                     const Text("Male", style: TextStyle(fontSize: 10)),
                   ],
                 ),
                 Column(
                   children: [
-                    Radio(
+                    Radio<int?>(
+                      key: Key("gender_${i}_female"), // ★ 여기도 key 추가
                       value: 1,
                       groupValue: gender[i],
-                      onChanged: (v) => setState(() => gender[i] = v!),
+                      onChanged: (v) => setState(() => gender[i] = v),
                     ),
                     const Text("Female", style: TextStyle(fontSize: 10)),
                   ],

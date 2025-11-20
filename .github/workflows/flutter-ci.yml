@@ -1,0 +1,31 @@
+name: Flutter CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+
+      - name: Flutter pub get
+        run: flutter pub get
+
+      # 일반 단위/위젯 테스트
+      - name: Run flutter test (unit/widget)
+        run: flutter test
+
+      # 네가 쓰는 integration_test도 같이 돌림
+      - name: Run integration tests
+        run: flutter test integration_test
