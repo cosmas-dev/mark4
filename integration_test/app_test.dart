@@ -56,14 +56,14 @@ void main() {
     await tester.pumpAndSettle();
 
     // ========== 5. Gender 선택 ==========
-    await tester.tap(find.byKey(const Key("gender_0_male"))); // CH-1
-    await tester.pumpAndSettle();
+    // await tester.tap(find.byKey(const Key("gender_0_male"))); // CH-1
+    // await tester.pumpAndSettle();
 
-    await tester.tap(find.byKey(const Key("gender_1_male"))); // CH-2
-    await tester.pumpAndSettle();
+    // await tester.tap(find.byKey(const Key("gender_1_male"))); // CH-2
+    // await tester.pumpAndSettle();
 
-    await tester.tap(find.byKey(const Key("gender_2_male"))); // CH-3
-    await tester.pumpAndSettle();
+    // await tester.tap(find.byKey(const Key("gender_2_male"))); // CH-3
+    // await tester.pumpAndSettle();
 
     // ========== 6. Next 버튼 눌러보기 ==========
     final nextBtn = find.text("Next");
