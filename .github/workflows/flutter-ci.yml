@@ -33,7 +33,7 @@ jobs:
           cat test_output.log | tojunit -o integration_test_results.xml
 
       - name: Upload Test Results
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: integration_test_results
           path: integration_test_results.xml
