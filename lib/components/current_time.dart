@@ -7,6 +7,10 @@ String getCurrentTime() {
 }
 
 String getCurrentDate() {
-  final now = DateTime.now();
-  return DateFormat('yyyy. MM. dd. EEE', 'en_EN').format(now);
+  try {
+    return DateFormat("yyyy.MM.dd", "ko_KR").format(DateTime.now());
+  } catch (_) {
+    // GitHub Actions 환경을 위해 fallback
+    return DateFormat("yyyy.MM.dd").format(DateTime.now());
+  }
 }
