@@ -24,9 +24,19 @@ jobs:
       - name: Flutter pub get
         run: flutter pub get
 
-      # 일반 단위/위젯 테스트
-      - name: Run flutter test (unit/widget)
-        run: flutter test
+      # # 일반 단위/위젯 테스트
+      # - name: Run flutter test (unit/widget)
+      #   run: flutter test
+      - name: Run integration tests
+        run: |
+          flutter test --machine integration_test/ > test_output.log
+          cat test_output.log | tojunit -o integration_test_results.xml
+
+      - name: Upload Test Results
+        uses: actions/upload-artifact@v3
+        with:
+          name: integration_test_results
+          path: integration_test_results.xml
 
       # # 네가 쓰는 integration_test도 같이 돌림
       # - name: Run integration tests
