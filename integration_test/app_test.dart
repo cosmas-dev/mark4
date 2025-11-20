@@ -23,7 +23,7 @@ void main() {
     expect(startButton, findsOneWidget);
 
     await tester.tap(startButton);
-    await tester.pumpAndSettle();
+    await tester.pumpAndSettle(const Duration(seconds: 2));
 
     // 팝업 타이틀 확인
     expect(find.text("Channel Information"), findsOneWidget);
