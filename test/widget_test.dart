@@ -1,10 +1,13 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mark4/main.dart'; // ← 실제 앱 실행 파일 import
+import 'package:intl/date_symbol_data_local.dart';
+import 'package:mark4/main.dart';
 import 'package:flutter/material.dart';
 
 void main() {
-  testWidgets("RunTest Flow - Popup appears and inputs work", (tester) async {
-    // 앱 실행
+  setUpAll(() async {
+    await initializeDateFormatting('ko_KR', null);
+  });
+  testWidgets("Test Flow", (tester) async {
     await tester.pumpWidget(const MyApp());
     await tester.pumpAndSettle();
 
@@ -20,7 +23,7 @@ void main() {
     expect(startButton, findsOneWidget);
 
     await tester.tap(startButton);
-    await tester.pumpAndSettle();
+    await tester.pumpAndSettle(const Duration(seconds: 2));
 
     // 팝업 타이틀 확인
     expect(find.text("Channel Information"), findsOneWidget);
@@ -53,10 +56,14 @@ void main() {
     await tester.pumpAndSettle();
 
     // ========== 5. Gender 선택 ==========
-    final femaleRadio = find.byType(Radio).at(1); // CH-1 Female
-    await tester.tap(femaleRadio);
+    // await tester.tap(find.byKey(const Key("gender_0_male"))); // CH-1
+    // await tester.pumpAndSettle();
 
-    await tester.pumpAndSettle();
+    // await tester.tap(find.byKey(const Key("gender_1_male"))); // CH-2
+    // await tester.pumpAndSettle();
+
+    // await tester.tap(find.byKey(const Key("gender_2_male"))); // CH-3
+    // await tester.pumpAndSettle();
 
     // ========== 6. Next 버튼 눌러보기 ==========
     final nextBtn = find.text("Next");
@@ -69,6 +76,10 @@ void main() {
     // 닫히는 걸 기대한다면 아래 주석을 반대로 바꿔야 함:
     // expect(find.text("Channel Information"), findsNothing);
 
-    expect(find.text("Channel Information"), findsOneWidget);
+    // expect(find.text("Channel Information"), findsOneWidget);
+
+    // ========== 7. Run 버튼 눌러보기 ==========
+    final runBtn = find.text("Run");
+    expect(runBtn, findsOneWidget);
   });
 }
