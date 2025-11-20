@@ -56,13 +56,24 @@ void main() {
     await tester.pumpAndSettle();
 
     // ========== 5. Gender 선택 ==========
-    await tester.tap(find.byKey(const Key("gender_0_male"))); // CH-1
+    // ========= 5. Gender 선택 ==========
+
+    // CH-1
+    final g1 = find.byKey(const Key("gender_0_male"));
+    expect(g1, findsOneWidget);
+    await tester.tap(g1);
     await tester.pumpAndSettle();
 
-    await tester.tap(find.byKey(const Key("gender_1_male"))); // CH-2
+    // CH-2
+    final g2 = find.byKey(const Key("gender_1_male"));
+    expect(g2, findsOneWidget);
+    await tester.tap(g2);
     await tester.pumpAndSettle();
 
-    await tester.tap(find.byKey(const Key("gender_2_male"))); // CH-3
+    // CH-3
+    final g3 = find.byKey(const Key("gender_2_male"));
+    expect(g3, findsOneWidget);
+    await tester.tap(g3);
     await tester.pumpAndSettle();
 
     // ========== 6. Next 버튼 눌러보기 ==========
