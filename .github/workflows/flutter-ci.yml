@@ -16,7 +16,7 @@ jobs:
       - name: Install Flutter
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: "3.24.0"
+          flutter-version: "3.38.2"
 
       # Linux 데스크탑 빌드에 필요한 패키지 설치
       - name: Install Linux dependencies
