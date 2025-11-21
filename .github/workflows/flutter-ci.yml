@@ -66,6 +66,12 @@ jobs:
       - name: Install dependencies
         run: flutter pub get
 
+      - name: Activate junitreport
+        run: dart pub global activate junitreport
+      
+      - name: Add pub-cache to PATH
+        run: echo "$HOME/.pub-cache/bin" >> $GITHUB_PATH
+
       # -----------------------------
       # 1) Unit & Widget Tests (CI)
       # -----------------------------
