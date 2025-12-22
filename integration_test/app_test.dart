@@ -28,7 +28,7 @@ void main() {
     // 팝업 타이틀 확인
     expect(find.text("Channel Information"), findsOneWidget);
 
-    // ========== 3. User ID 입력 ==========
+    // ========== 3. 이름 입력 ==========
     final userIdField1 = find.byType(TextField).at(0);
     expect(userIdField1, findsOneWidget);
 
@@ -39,11 +39,11 @@ void main() {
     await tester.enterText(userIdField2, "lee");
 
     final userIdField3 = find.byType(TextField).at(2);
-    await tester.enterText(userIdField3, "choi");
+    await tester.enterText(userIdField3, "park");
 
     await tester.pumpAndSettle();
 
-    // ========== 4. Age 입력 ==========
+    // ========== 4. 나이 입력 ==========
     final ageField1 = find.byType(TextField).at(3);
     await tester.enterText(ageField1, "25");
 
@@ -55,7 +55,7 @@ void main() {
 
     await tester.pumpAndSettle();
 
-    // ========== 5. Gender 선택 ==========
+    // ========== 5. 성별 선택 ==========
     // await tester.tap(find.byKey(const Key("gender_0_male"))); // CH-1
     // await tester.pumpAndSettle();
 

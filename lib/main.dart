@@ -1,13 +1,40 @@
 import 'dart:io';
 
+import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/date_symbol_data_local.dart';
+import 'package:mark4/DB/database_helper.dart';
 import 'package:mark4/home.dart';
+import 'package:path/path.dart';
+import 'package:sqflite/sqflite.dart';
 import 'package:window_manager/window_manager.dart';
+
+Future<void> deleteExistingDatabase() async {
+  final dbPath = await getDatabasesPath();
+  final path = join(dbPath, 'app_database.db');
+
+  // 파일 존재하면 삭제
+  await deleteDatabase(path);
+  print("📌 기존 DB 삭제 완료: $path");
+}
+
+Future<void> debugPrintImagesLocal() async {
+  final db = await DatabaseHelper().database;
+  final rows = await db.query('run_test_local', orderBy: 'created_at DESC');
+
+  print("====== 📦 horse_local 테이블 출력 (${rows.length}건) ======");
+  for (final row in rows) {
+    print(row);
+  }
+  print("=========================================================");
+}
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await initializeDateFormatting('ko_KR', null); // 로케일 초기화
+
+  // await deleteExistingDatabase();
+  await debugPrintImagesLocal();
 
   if (!Platform.isAndroid && !Platform.isIOS) {
     // 데스크탑 플랫폼에서만 윈도우 매니저 초기화

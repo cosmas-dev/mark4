@@ -1,7 +1,10 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:mark4/DB/database_helper.dart';
 import 'package:mark4/components/current_time.dart';
 import 'package:mark4/preparing.dart';
+
+enum PopupType { channelMulti, channelSingle }
 
 class RunTest extends StatefulWidget {
   const RunTest({super.key});
@@ -11,7 +14,10 @@ class RunTest extends StatefulWidget {
 }
 
 class _RunTestState extends State<RunTest> {
+  int selectedChannel = 0;
   bool showPopup = false;
+  PopupType? currentPopup;
+  final List<String?> selectedItem = [null, null, null];
 
   final List<TextEditingController> userIdController = [
     TextEditingController(),
@@ -26,6 +32,8 @@ class _RunTestState extends State<RunTest> {
   ];
 
   List<int?> gender = [null, null, null];
+
+  final List<String> itemOptions = ['Flu', 'COVID19', 'RSV'];
 
   @override
   Widget build(BuildContext context) {
@@ -65,9 +73,36 @@ class _RunTestState extends State<RunTest> {
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                       children: [
-                        Image.asset("images/kit1.png", scale: 8),
-                        Image.asset("images/kit2.png", scale: 8),
-                        Image.asset("images/kit3.png", scale: 8),
+                        InkWell(
+                          onTap: () {
+                            setState(() {
+                              selectedChannel = 0;
+                              currentPopup = PopupType.channelSingle;
+                              showPopup = true;
+                            });
+                          },
+                          child: Image.asset("images/kit1.png", scale: 8),
+                        ),
+                        InkWell(
+                          onTap: () {
+                            setState(() {
+                              selectedChannel = 1;
+                              currentPopup = PopupType.channelSingle;
+                              showPopup = true;
+                            });
+                          },
+                          child: Image.asset("images/kit2.png", scale: 8),
+                        ),
+                        InkWell(
+                          onTap: () {
+                            setState(() {
+                              selectedChannel = 2;
+                              currentPopup = PopupType.channelSingle;
+                              showPopup = true;
+                            });
+                          },
+                          child: Image.asset("images/kit3.png", scale: 8),
+                        ),
                       ],
                     ),
                   ),
@@ -82,12 +117,11 @@ class _RunTestState extends State<RunTest> {
                       ),
                     ),
                   ),
-                  _bottomButtons(),
                 ],
               ),
             ),
+            bottomNavigationBar: _bottomButtons(),
           ),
-
           // 팝업 + 블러
           if (showPopup) _popupOverlay(),
         ],
@@ -98,8 +132,10 @@ class _RunTestState extends State<RunTest> {
   // ========================== UI PARTS =============================
 
   Widget _bottomButtons() {
+    final Size size = MediaQuery.of(context).size;
     return Container(
-      height: 90,
+      height: 100,
+      width: size.width,
       decoration: const BoxDecoration(
         color: Colors.white,
         boxShadow: [
@@ -112,16 +148,44 @@ class _RunTestState extends State<RunTest> {
       ),
       child: Row(
         children: [
-          _bottomButton(
-            "Holder\nIn/Out",
-            Icons.import_export,
-            const Color(0xFF6B6B6B),
-            () {},
+          Expanded(
+            flex: 1,
+            child: _bottomButton(
+              "Holder\nIn/Out",
+              Icons.import_export,
+              const Color(0xFF6B6B6B),
+              () {},
+            ),
           ),
-          _bottomButton("Stop", Icons.close, const Color(0xFFE83C3C), () {}),
-          _bottomButton("Start", Icons.play_arrow, const Color(0xFF227BFF), () {
-            setState(() => showPopup = true);
-          }),
+          // _bottomButton("Stop", Icons.close, const Color(0xFFE83C3C), () {}),
+          Expanded(
+            flex: 2,
+            child: _bottomButton(
+              "Start",
+              Icons.play_arrow,
+              const Color(0xFF227BFF),
+              () async {
+                final db = DatabaseHelper();
+
+                for (int i = 0; i < 3; i++) {
+                  if (selectedItem[i] == null) continue;
+
+                  await db.insertRunTest(
+                    channel: i + 1,
+                    item: selectedItem[i]!,
+                    userId: userIdController[i].text,
+                    age: int.tryParse(ageController[i].text),
+                    gender: gender[i] == 0 ? 'Male' : 'Female',
+                  );
+                }
+
+                setState(() {
+                  currentPopup = PopupType.channelMulti;
+                  showPopup = true;
+                });
+              },
+            ),
+          ),
         ],
       ),
     );
@@ -133,28 +197,26 @@ class _RunTestState extends State<RunTest> {
     Color color,
     VoidCallback onTap,
   ) {
-    return Expanded(
-      child: InkWell(
-        onTap: onTap,
-        child: Container(
-          color: color,
-          child: Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(icon, color: Colors.white, size: 28),
-                const SizedBox(height: 4),
-                Text(
-                  text,
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 13,
-                    height: 1.1,
-                  ),
+    return InkWell(
+      onTap: onTap,
+      child: Container(
+        color: color,
+        child: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(icon, color: Colors.white, size: 28),
+              const SizedBox(height: 4),
+              Text(
+                text,
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 13,
+                  height: 1.1,
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
         ),
       ),
@@ -174,7 +236,14 @@ class _RunTestState extends State<RunTest> {
           filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
           child: Container(
             color: Colors.black.withAlpha(64),
-            child: Center(child: SingleChildScrollView(child: _popupContent())),
+            child: Center(
+              child: SingleChildScrollView(
+                child:
+                    currentPopup == PopupType.channelSingle
+                        ? _popupContent1()
+                        : _popupContent(),
+              ),
+            ),
           ),
         ),
       ),
@@ -234,9 +303,17 @@ class _RunTestState extends State<RunTest> {
               ),
             ),
 
+            Padding(
+              padding: const EdgeInsets.only(left: 20, right: 20),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [_label("Item"), _dropdown()],
+              ),
+            ),
+
             // ===== 하단 버튼 영역 =====
             Padding(
-              padding: const EdgeInsets.fromLTRB(18, 0, 18, 14),
+              padding: const EdgeInsets.fromLTRB(18, 20, 18, 14),
               child: Row(
                 children: [
                   Expanded(
@@ -418,6 +495,192 @@ class _RunTestState extends State<RunTest> {
           child: Text(
             text,
             style: const TextStyle(color: Colors.white, fontSize: 15),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _popupContent1() {
+    return Material(
+      color: Colors.transparent,
+      child: Container(
+        width: MediaQuery.of(context).size.width * 0.9,
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(14),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // ===== Header =====
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(14),
+              decoration: const BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [Color(0xFF777777), Color(0xFF555555)],
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                ),
+                borderRadius: BorderRadius.only(
+                  topLeft: Radius.circular(14),
+                  topRight: Radius.circular(14),
+                ),
+              ),
+              child: Text(
+                "CH-${selectedChannel + 1} information",
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+
+            Padding(
+              padding: const EdgeInsets.all(18),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _label("Item"),
+                  _dropdown(),
+
+                  _label("User ID *"),
+                  _input(userIdController[selectedChannel]),
+
+                  _label("Age"),
+                  _input(ageController[selectedChannel], isNumber: true),
+
+                  _label("Gender"),
+                  Row(
+                    children: [
+                      _genderBtn("Male", 0),
+                      const SizedBox(width: 12),
+                      _genderBtn("Female", 1),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+
+            // ===== Bottom Buttons =====
+            Padding(
+              padding: const EdgeInsets.fromLTRB(18, 0, 18, 16),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: _popupBtn("Apply", () async {
+                      final db = DatabaseHelper();
+
+                      await db.insertRunTest(
+                        channel: selectedChannel + 1,
+                        item: selectedItem[selectedChannel]!,
+                        userId: userIdController[selectedChannel].text,
+                        age: int.tryParse(ageController[selectedChannel].text),
+                        gender:
+                            gender[selectedChannel] == 0 ? 'Male' : 'Female',
+                      );
+
+                      setState(() => showPopup = false);
+                    }),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: _popupBtn("Reset", () {
+                      userIdController[selectedChannel].clear();
+                      ageController[selectedChannel].clear();
+                      setState(() => gender[selectedChannel] = null);
+                    }),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: _popupBtn("Cancel", () {
+                      setState(() => showPopup = false);
+                    }),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _label(String text) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 6, top: 14),
+      child: Text(text, style: const TextStyle(fontSize: 13)),
+    );
+  }
+
+  Widget _input(TextEditingController c, {bool isNumber = false}) {
+    return Container(
+      height: 44,
+      padding: const EdgeInsets.symmetric(horizontal: 12),
+      decoration: BoxDecoration(
+        border: Border.all(color: Colors.black12),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: TextField(
+        controller: c,
+        keyboardType: isNumber ? TextInputType.number : null,
+        decoration: const InputDecoration(border: InputBorder.none),
+      ),
+    );
+  }
+
+  Widget _dropdown() {
+    return SizedBox(
+      height: 44,
+      child: DropdownButtonFormField<String>(
+        value: selectedItem[selectedChannel],
+        items:
+            itemOptions
+                .map((e) => DropdownMenuItem<String>(value: e, child: Text(e)))
+                .toList(),
+        onChanged: (v) {
+          setState(() {
+            selectedItem[selectedChannel] = v;
+          });
+        },
+        decoration: InputDecoration(
+          contentPadding: const EdgeInsets.symmetric(horizontal: 12),
+          border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(8),
+            borderSide: const BorderSide(color: Colors.black12),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(8),
+            borderSide: const BorderSide(color: Colors.blue),
+          ),
+        ),
+        icon: const Icon(Icons.arrow_drop_down),
+      ),
+    );
+  }
+
+  Widget _genderBtn(String text, int value) {
+    final selected = gender[selectedChannel] == value;
+    return Expanded(
+      child: InkWell(
+        onTap: () => setState(() => gender[selectedChannel] = value),
+        child: Container(
+          height: 44,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(color: selected ? Colors.blue : Colors.black12),
+          ),
+          child: Center(
+            child: Text(
+              text,
+              style: TextStyle(
+                fontWeight: FontWeight.w600,
+                color: selected ? Colors.blue : Colors.black,
+              ),
+            ),
           ),
         ),
       ),

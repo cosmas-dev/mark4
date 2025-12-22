@@ -130,12 +130,11 @@ class _PreparingPageState extends State<PreparingPage> {
                   ),
                 ),
               ),
-
-              _bottomButtons(),
             ],
           ),
         ),
       ),
+      bottomNavigationBar: _bottomButtons(),
     );
   }
 
@@ -159,21 +158,22 @@ class _PreparingPageState extends State<PreparingPage> {
           style: TextStyle(fontSize: 15, height: 1.4, color: Color(0xFF1A2A4A)),
         ),
         const SizedBox(height: 25),
-        Row(
-          children: [
-            Expanded(child: _imgBox(number: "①")),
-            const SizedBox(width: 12),
-            Expanded(child: _imgBox(number: "②")),
-          ],
-        ),
-        const SizedBox(height: 12),
-        Row(
-          children: [
-            Expanded(child: _imgBox(number: "③")),
-            const SizedBox(width: 12),
-            Expanded(child: _imgBox(number: "④")),
-          ],
-        ),
+        // Row(
+        //   children: [
+        //     Expanded(child: _imgBox(number: "①")),
+        //     const SizedBox(width: 12),
+        //     Expanded(child: _imgBox(number: "②")),
+        //   ],
+        // ),
+        // const SizedBox(height: 12),
+        // Row(
+        //   children: [
+        //     Expanded(child: _imgBox(number: "③")),
+        //     const SizedBox(width: 12),
+        //     Expanded(child: _imgBox(number: "④")),
+        //   ],
+        // ),
+        Image.asset("images/2.png"),
       ],
     );
   }
@@ -197,21 +197,7 @@ class _PreparingPageState extends State<PreparingPage> {
           style: TextStyle(fontSize: 15, height: 1.4, color: Color(0xFF1A2A4A)),
         ),
         const SizedBox(height: 25),
-        Row(
-          children: [
-            Expanded(child: _imgBox(number: "①")),
-            const SizedBox(width: 12),
-            Expanded(child: _imgBox(number: "②")),
-          ],
-        ),
-        const SizedBox(height: 12),
-        Row(
-          children: [
-            Expanded(child: _imgBox(number: "③")),
-            const SizedBox(width: 12),
-            Expanded(child: _imgBox(number: "④")),
-          ],
-        ),
+        Image.asset('images/4.png'),
       ],
     );
   }
@@ -289,7 +275,7 @@ class _PreparingPageState extends State<PreparingPage> {
   // ======================= BOTTOM BUTTONS =======================
   Widget _bottomButtons() {
     return SizedBox(
-      height: 90,
+      height: 100,
       child: Row(
         children: [
           Expanded(

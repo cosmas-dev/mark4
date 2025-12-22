@@ -66,6 +66,9 @@ jobs:
       - name: Install dependencies
         run: flutter pub get
 
+      # -----------------------------
+      # junitreport 설치
+      # -----------------------------
       - name: Activate junitreport
         run: dart pub global activate junitreport
       
