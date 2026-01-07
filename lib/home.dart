@@ -94,17 +94,17 @@ class Home extends StatelessWidget {
                             },
                             child: Column(
                               mainAxisAlignment: MainAxisAlignment.center,
-                              children: const [
-                                Icon(
-                                  Icons.search,
-                                  size: 52,
+                              children: [
+                                Image.asset(
+                                  'images/run_test_icon.png',
+                                  scale: 3,
                                   color: Colors.white,
                                 ),
                                 SizedBox(height: 12),
                                 Text(
                                   "RUN TEST",
                                   style: TextStyle(
-                                    fontSize: 22,
+                                    fontSize: 30,
                                     fontWeight: FontWeight.bold,
                                     color: Colors.white,
                                   ),
@@ -141,18 +141,18 @@ class Home extends StatelessWidget {
                                   onTap: () {},
                                   child: Column(
                                     mainAxisAlignment: MainAxisAlignment.center,
-                                    children: const [
-                                      Icon(
-                                        Icons.insert_chart,
-                                        size: 32,
+                                    children: [
+                                      Image.asset(
+                                        'images/test_result_icon.png',
+                                        scale: 5,
                                         color: Colors.white,
                                       ),
                                       SizedBox(height: 6),
                                       Text(
                                         "TEST RESULT",
                                         style: TextStyle(
-                                          fontSize: 16,
-                                          fontWeight: FontWeight.w600,
+                                          fontSize: 18,
+                                          fontWeight: FontWeight.bold,
                                           color: Colors.white,
                                         ),
                                       ),
@@ -187,18 +187,18 @@ class Home extends StatelessWidget {
                                   onTap: () {},
                                   child: Column(
                                     mainAxisAlignment: MainAxisAlignment.center,
-                                    children: const [
-                                      Icon(
-                                        Icons.settings,
-                                        size: 32,
+                                    children: [
+                                      Image.asset(
+                                        'images/setting_icon.png',
+                                        scale: 6,
                                         color: Colors.white,
                                       ),
                                       SizedBox(height: 6),
                                       Text(
                                         "SETTING",
                                         style: TextStyle(
-                                          fontSize: 16,
-                                          fontWeight: FontWeight.w600,
+                                          fontSize: 18,
+                                          fontWeight: FontWeight.bold,
                                           color: Colors.white,
                                         ),
                                       ),

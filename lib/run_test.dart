@@ -150,75 +150,64 @@ class _RunTestState extends State<RunTest> {
         children: [
           Expanded(
             flex: 1,
-            child: _bottomButton(
-              "Holder\nIn/Out",
-              Icons.import_export,
-              const Color(0xFF6B6B6B),
-              () {},
+            child: InkWell(
+              onTap: () {},
+              child: Container(
+                color: const Color(0xFF6B6B6B),
+                child: Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Image.asset("images/holder_icon.png", scale: 7),
+                      const SizedBox(height: 4),
+                      Text(
+                        "Holder\nIn/Out",
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 13,
+                          height: 1.1,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
             ),
           ),
           // _bottomButton("Stop", Icons.close, const Color(0xFFE83C3C), () {}),
           Expanded(
             flex: 2,
-            child: _bottomButton(
-              "Start",
-              Icons.play_arrow,
-              const Color(0xFF227BFF),
-              () async {
-                final db = DatabaseHelper();
-
-                for (int i = 0; i < 3; i++) {
-                  if (selectedItem[i] == null) continue;
-
-                  await db.insertRunTest(
-                    channel: i + 1,
-                    item: selectedItem[i]!,
-                    userId: userIdController[i].text,
-                    age: int.tryParse(ageController[i].text),
-                    gender: gender[i] == 0 ? 'Male' : 'Female',
-                  );
-                }
-
-                setState(() {
-                  currentPopup = PopupType.channelMulti;
-                  showPopup = true;
-                });
+            child: InkWell(
+              onTap: () {
+                _popupContent();
               },
+              child: Container(
+                color: const Color(0xFF227BFF),
+                child: Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Image.asset('images/start_icon.png', scale: 7),
+                      const SizedBox(height: 10),
+                      Text(
+                        "Start",
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 20,
+                          height: 1.1,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
             ),
           ),
         ],
-      ),
-    );
-  }
-
-  Widget _bottomButton(
-    String text,
-    IconData icon,
-    Color color,
-    VoidCallback onTap,
-  ) {
-    return InkWell(
-      onTap: onTap,
-      child: Container(
-        color: color,
-        child: Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(icon, color: Colors.white, size: 28),
-              const SizedBox(height: 4),
-              Text(
-                text,
-                textAlign: TextAlign.center,
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 13,
-                  height: 1.1,
-                ),
-              ),
-            ],
-          ),
-        ),
       ),
     );
   }
