@@ -23,7 +23,7 @@ class _RunTestState extends State<RunTest> {
   final List<String?> selectedItem = [null, null, null];
 
   Socket? socket;
-  final String iotDeviceIp = "121.136.8.74";
+  final String iotDeviceIp = "192.168.0.1";
 
   final List<TextEditingController> userIdController = [
     TextEditingController(),
@@ -229,7 +229,7 @@ class _RunTestState extends State<RunTest> {
       // CAM_CTRL 요청 전송 (촬영 시작)
       var requestData = jsonEncode({
         "header": "F001",
-        "body": {"CMD": "AD_DR_CTRL", "DATA": openClose},
+        "body": {"CMD": "AD_DR_CTRL", "DATA": "$openClose"},
       });
       socket!.writeln(requestData);
       await socket!.flush();
