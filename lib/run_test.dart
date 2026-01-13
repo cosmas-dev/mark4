@@ -17,6 +17,7 @@ class RunTest extends StatefulWidget {
 
 class _RunTestState extends State<RunTest> {
   int selectedChannel = 0;
+  int openClose = 1;
   bool showPopup = false;
   PopupType? currentPopup;
   final List<String?> selectedItem = [null, null, null];
@@ -228,12 +229,15 @@ class _RunTestState extends State<RunTest> {
       // CAM_CTRL 요청 전송 (촬영 시작)
       var requestData = jsonEncode({
         "header": "F001",
-        "body": {"CMD": "AD_DR_CTRL", "DATA": 1},
+        "body": {"CMD": "AD_DR_CTRL", "DATA": openClose},
       });
       socket!.writeln(requestData);
       await socket!.flush();
-      print("📡 SET_PARM 요청 전송");
+      print("📡 AD_DR_CTRL 요청 전송");
       await Future.delayed(const Duration(seconds: 3));
+      setState(() {
+        openClose = openClose == 1 ? 2 : 1;
+      });
       // socket?.close();
     } catch (e) {
       print("❌ IoT 기기 연결 실패: $e");
