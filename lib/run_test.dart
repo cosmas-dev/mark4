@@ -229,7 +229,7 @@ class _RunTestState extends State<RunTest> {
       // CAM_CTRL 요청 전송 (촬영 시작)
       var requestData = jsonEncode({
         "header": "F001",
-        "body": {"CMD": "AD_DR_CTRL", "DATA": "$openClose"},
+        "body": {"CMD": "AD_DR_CTRL", "DATA": openClose},
       });
       socket!.writeln(requestData);
       await socket!.flush();
