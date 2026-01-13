@@ -23,7 +23,7 @@ class _RunTestState extends State<RunTest> {
   final List<String?> selectedItem = [null, null, null];
 
   Socket? socket;
-  final String iotDeviceIp = "192.168.0.1";
+  final String iotDeviceIp = "192.168.0.72";
 
   final List<TextEditingController> userIdController = [
     TextEditingController(),
