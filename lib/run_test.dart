@@ -1,3 +1,5 @@
+import 'dart:convert';
+import 'dart:io';
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:mark4/DB/database_helper.dart';
@@ -18,6 +20,9 @@ class _RunTestState extends State<RunTest> {
   bool showPopup = false;
   PopupType? currentPopup;
   final List<String?> selectedItem = [null, null, null];
+
+  Socket? socket;
+  final String iotDeviceIp = "121.136.8.74";
 
   final List<TextEditingController> userIdController = [
     TextEditingController(),
@@ -151,7 +156,9 @@ class _RunTestState extends State<RunTest> {
           Expanded(
             flex: 1,
             child: InkWell(
-              onTap: () {},
+              onTap: () {
+                editIoTSettings();
+              },
               child: Container(
                 color: const Color(0xFF6B6B6B),
                 child: Center(
@@ -210,6 +217,27 @@ class _RunTestState extends State<RunTest> {
         ],
       ),
     );
+  }
+
+  Future<void> editIoTSettings() async {
+    try {
+      // IoT 기기와 소켓 연결 (포트 9191)
+      socket = await Socket.connect(iotDeviceIp, 9191);
+      print("✅ IoT 기기와 연결 성공 (사진 촬영 요청)");
+
+      // CAM_CTRL 요청 전송 (촬영 시작)
+      var requestData = jsonEncode({
+        "header": "F001",
+        "body": {"CMD": "AD_DR_CTRL", "DATA": 1},
+      });
+      socket!.writeln(requestData);
+      await socket!.flush();
+      print("📡 SET_PARM 요청 전송");
+      await Future.delayed(const Duration(seconds: 3));
+      // socket?.close();
+    } catch (e) {
+      print("❌ IoT 기기 연결 실패: $e");
+    }
   }
 
   // ===================== POPUP OVERLAY =====================
