@@ -1,11 +1,20 @@
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:mark4/components/current_time.dart';
 import 'package:mark4/run_test.dart';
 
-class Home extends StatelessWidget {
+class Home extends StatefulWidget {
   const Home({super.key});
+
+  @override
+  State<Home> createState() => _HomeState();
+}
+
+class _HomeState extends State<Home> {
+  Socket? socket;
+  final String iotDeviceIp = "192.168.0.72";
 
   @override
   Widget build(BuildContext context) {
@@ -254,6 +263,7 @@ class Home extends StatelessWidget {
                   text: "Shutdown",
                   color: const Color(0xFFE83C3C),
                   onTap: () {
+                    powerOff();
                     Process.run('shutdown', ['-h', 'now']);
                   },
                 ),
@@ -310,5 +320,26 @@ class Home extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  Future<void> powerOff() async {
+    try {
+      // IoT 기기와 소켓 연결 (포트 9191)
+      socket = await Socket.connect(iotDeviceIp, 9191);
+      print("✅ IoT 기기와 연결 성공 (사진 촬영 요청)");
+
+      // CAM_CTRL 요청 전송 (촬영 시작)
+      var requestData = jsonEncode({
+        "header": "F001",
+        "body": {"CMD": "AD_PWR_OFF", "DATA": "1"},
+      });
+      socket!.writeln(requestData);
+      await socket!.flush();
+      print("📡 AD_PWR_OFF 요청 전송");
+      await Future.delayed(const Duration(seconds: 3));
+      socket?.close();
+    } catch (e) {
+      print("❌ IoT 기기 연결 실패: $e");
+    }
   }
 }
