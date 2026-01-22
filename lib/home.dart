@@ -168,15 +168,15 @@ class _HomeState extends State<Home> {
                                       ScaffoldMessenger.of(
                                         context,
                                       ).showSnackBar(
-                                        SnackBar(
-                                          content: Text('USB가 연결되어 있습니다'),
-                                        ),
+                                        SnackBar(content: Text('USB Found')),
                                       );
                                     } else {
                                       ScaffoldMessenger.of(
                                         context,
                                       ).showSnackBar(
-                                        SnackBar(content: Text('USB를 연결해주세요')),
+                                        SnackBar(
+                                          content: Text('USB Not Found'),
+                                        ),
                                       );
                                     }
                                   },
