@@ -16,6 +16,20 @@ class _HomeState extends State<Home> {
   Socket? socket;
   final String iotDeviceIp = "192.168.0.72";
 
+  bool hasMountedUsb() {
+    final baseDirs = ['/media/cosmas', '/run/media/cosmas'];
+
+    for (final base in baseDirs) {
+      final dir = Directory(base);
+      if (!dir.existsSync()) continue;
+
+      final hasDir = dir.listSync().any((e) => e is Directory);
+
+      if (hasDir) return true;
+    }
+    return false;
+  }
+
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -147,7 +161,25 @@ class _HomeState extends State<Home> {
                                 color: Colors.transparent,
                                 child: InkWell(
                                   borderRadius: BorderRadius.circular(18),
-                                  onTap: () {},
+                                  onTap: () {
+                                    final connected = hasMountedUsb();
+
+                                    if (connected) {
+                                      ScaffoldMessenger.of(
+                                        context,
+                                      ).showSnackBar(
+                                        SnackBar(
+                                          content: Text('USB가 연결되어 있습니다'),
+                                        ),
+                                      );
+                                    } else {
+                                      ScaffoldMessenger.of(
+                                        context,
+                                      ).showSnackBar(
+                                        SnackBar(content: Text('USB를 연결해주세요')),
+                                      );
+                                    }
+                                  },
                                   child: Column(
                                     mainAxisAlignment: MainAxisAlignment.center,
                                     children: [
