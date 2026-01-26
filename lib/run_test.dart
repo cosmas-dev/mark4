@@ -8,6 +8,8 @@ import 'package:mark4/preparing.dart';
 
 enum PopupType { channelMulti, channelSingle }
 
+enum InputMethod { direct, ch1, ch2, ch3 }
+
 class RunTest extends StatefulWidget {
   const RunTest({super.key});
 
@@ -16,11 +18,13 @@ class RunTest extends StatefulWidget {
 }
 
 class _RunTestState extends State<RunTest> {
+  final _formKey = GlobalKey<FormState>();
   int selectedChannel = 0;
   int openClose = 1;
   bool showPopup = false;
   PopupType? currentPopup;
   final List<String?> selectedItem = [null, null, null];
+  InputMethod inputMethod = InputMethod.direct;
 
   Socket? socket;
   final String iotDeviceIp = "192.168.0.72";
@@ -40,6 +44,10 @@ class _RunTestState extends State<RunTest> {
   List<int?> gender = [null, null, null];
 
   final List<String> itemOptions = ['Flu', 'COVID19', 'RSV'];
+
+  final List<String?> sampleType = [null, null, null];
+
+  final List<String> sampleTypeOptions = ['Blood', 'Saliva', 'Nasal'];
 
   @override
   Widget build(BuildContext context) {
@@ -93,6 +101,7 @@ class _RunTestState extends State<RunTest> {
                           onTap: () {
                             setState(() {
                               selectedChannel = 1;
+                              inputMethod = InputMethod.direct;
                               currentPopup = PopupType.channelSingle;
                               showPopup = true;
                             });
@@ -189,7 +198,10 @@ class _RunTestState extends State<RunTest> {
             flex: 2,
             child: InkWell(
               onTap: () {
-                _popupContent();
+                setState(() {
+                  currentPopup = PopupType.channelMulti; // 또는 원하는 타입
+                  showPopup = true;
+                });
               },
               child: Container(
                 color: const Color(0xFF227BFF),
@@ -418,8 +430,14 @@ class _RunTestState extends State<RunTest> {
                   border: Border.all(color: Colors.black12),
                   borderRadius: BorderRadius.circular(8),
                 ),
-                child: TextField(
+                child: TextFormField(
                   controller: userIdController[i],
+                  validator: (v) {
+                    if (v == null || v.trim().isEmpty) {
+                      return "User ID를 입력해주세요";
+                    }
+                    return null;
+                  },
                   decoration: const InputDecoration(border: InputBorder.none),
                 ),
               ),
@@ -523,108 +541,300 @@ class _RunTestState extends State<RunTest> {
   }
 
   Widget _popupContent1() {
+    final methodItems = _inputMethodItems();
+    final validValues = methodItems.map((e) => e.value).toSet();
     return Material(
       color: Colors.transparent,
-      child: Container(
-        width: MediaQuery.of(context).size.width * 0.9,
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(14),
+      child: Form(
+        key: _formKey,
+        child: Container(
+          width: MediaQuery.of(context).size.width * 0.9,
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(14),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // ===== Header =====
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(14),
+                decoration: const BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [Color(0xFF777777), Color(0xFF555555)],
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                  ),
+                  borderRadius: BorderRadius.only(
+                    topLeft: Radius.circular(14),
+                    topRight: Radius.circular(14),
+                  ),
+                ),
+                child: Text(
+                  "CH-${selectedChannel + 1} information",
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+
+              Padding(
+                padding: const EdgeInsets.all(18),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        // ===== Input Method =====
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              _label("Input Method"),
+                              DropdownButtonFormField<InputMethod>(
+                                value:
+                                    validValues.contains(inputMethod)
+                                        ? inputMethod
+                                        : null,
+                                hint: const Text("Select"),
+                                items: methodItems,
+                                onChanged: (v) {
+                                  if (v == null) return;
+                                  setState(() {
+                                    inputMethod = v;
+                                    _applyInputMethod();
+                                  });
+                                },
+                                decoration: _dropdownDecoration(),
+                              ),
+                            ],
+                          ),
+                        ),
+
+                        const SizedBox(width: 12),
+
+                        // ===== Sample Type =====
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              _label("Sample type *"),
+                              DropdownButtonFormField<String>(
+                                value: sampleType[selectedChannel],
+                                hint: const Text("Select"),
+                                validator: (v) {
+                                  if (v == null) return "Sample Type을 선택해주세요";
+                                  return null;
+                                },
+                                items:
+                                    sampleTypeOptions
+                                        .map(
+                                          (e) => DropdownMenuItem(
+                                            value: e,
+                                            child: Text(e),
+                                          ),
+                                        )
+                                        .toList(),
+                                onChanged: (v) {
+                                  setState(() {
+                                    sampleType[selectedChannel] = v;
+                                  });
+                                },
+                                decoration: _dropdownDecoration(),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                    _label("Item"),
+                    _dropdown(),
+
+                    _label("User ID *"),
+                    _input(userIdController[selectedChannel]),
+
+                    _label("Age"),
+                    _input(ageController[selectedChannel], isNumber: true),
+
+                    _label("Gender"),
+                    FormField<int>(
+                      validator: (_) {
+                        if (gender[selectedChannel] == null) {
+                          return "Gender를 선택해주세요";
+                        }
+                        return null;
+                      },
+                      builder: (state) {
+                        return Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                _genderBtn("Male", 0),
+                                const SizedBox(width: 12),
+                                _genderBtn("Female", 1),
+                              ],
+                            ),
+                            if (state.hasError)
+                              Padding(
+                                padding: const EdgeInsets.only(top: 4),
+                                child: Text(
+                                  state.errorText!,
+                                  style: const TextStyle(
+                                    color: Colors.red,
+                                    fontSize: 12,
+                                  ),
+                                ),
+                              ),
+                          ],
+                        );
+                      },
+                    ),
+                  ],
+                ),
+              ),
+
+              // ===== Bottom Buttons =====
+              Padding(
+                padding: const EdgeInsets.fromLTRB(18, 0, 18, 16),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: _popupBtn("Apply", () async {
+                        if (!_formKey.currentState!.validate()) {
+                          return; // 🔥 여기서 끝
+                        }
+                        final db = DatabaseHelper();
+
+                        await db.insertRunTest(
+                          channel: selectedChannel + 1,
+                          item: selectedItem[selectedChannel]!,
+                          userId: userIdController[selectedChannel].text,
+                          age: int.tryParse(
+                            ageController[selectedChannel].text,
+                          ),
+                          gender:
+                              gender[selectedChannel] == 0 ? 'Male' : 'Female',
+                        );
+
+                        setState(() => showPopup = false);
+                      }),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: _popupBtn("Reset", () {
+                        setState(() {
+                          // Form 에러/상태 초기화
+                          _formKey.currentState?.reset();
+
+                          // 현재 채널 값 초기화
+                          userIdController[selectedChannel].clear();
+                          ageController[selectedChannel].clear();
+                          gender[selectedChannel] = null;
+                          selectedItem[selectedChannel] = null;
+                          sampleType[selectedChannel] = null;
+
+                          // Input Method도 기본값으로
+                          inputMethod = InputMethod.direct;
+                        });
+
+                        // (선택) 키보드 내리기
+                        FocusScope.of(context).unfocus();
+                      }),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: _popupBtn("Cancel", () {
+                        setState(() => showPopup = false);
+                      }),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
         ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            // ===== Header =====
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(14),
-              decoration: const BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [Color(0xFF777777), Color(0xFF555555)],
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                ),
-                borderRadius: BorderRadius.only(
-                  topLeft: Radius.circular(14),
-                  topRight: Radius.circular(14),
-                ),
-              ),
-              child: Text(
-                "CH-${selectedChannel + 1} information",
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ),
+      ),
+    );
+  }
 
-            Padding(
-              padding: const EdgeInsets.all(18),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _label("Item"),
-                  _dropdown(),
+  List<DropdownMenuItem<InputMethod>> _inputMethodItems() {
+    final current = selectedChannel + 1; // 1~3
 
-                  _label("User ID *"),
-                  _input(userIdController[selectedChannel]),
+    final items = <DropdownMenuItem<InputMethod>>[
+      const DropdownMenuItem(value: InputMethod.direct, child: Text("직접입력")),
+    ];
 
-                  _label("Age"),
-                  _input(ageController[selectedChannel], isNumber: true),
+    // 현재 채널 제외하고 나머지 채널만 추가
+    for (final ch in [1, 2, 3]) {
+      if (ch == current) continue;
+      items.add(
+        DropdownMenuItem(value: _methodFromChannel(ch), child: Text("CH-$ch")),
+      );
+    }
 
-                  _label("Gender"),
-                  Row(
-                    children: [
-                      _genderBtn("Male", 0),
-                      const SizedBox(width: 12),
-                      _genderBtn("Female", 1),
-                    ],
-                  ),
-                ],
-              ),
-            ),
+    // 만약 현재 inputMethod가 "현재 채널"로 설정돼있다면 direct로 강제
+    final validValues = items.map((e) => e.value).toSet();
+    if (!validValues.contains(inputMethod)) {
+      inputMethod = InputMethod.direct;
+    }
 
-            // ===== Bottom Buttons =====
-            Padding(
-              padding: const EdgeInsets.fromLTRB(18, 0, 18, 16),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: _popupBtn("Apply", () async {
-                      final db = DatabaseHelper();
+    return items;
+  }
 
-                      await db.insertRunTest(
-                        channel: selectedChannel + 1,
-                        item: selectedItem[selectedChannel]!,
-                        userId: userIdController[selectedChannel].text,
-                        age: int.tryParse(ageController[selectedChannel].text),
-                        gender:
-                            gender[selectedChannel] == 0 ? 'Male' : 'Female',
-                      );
+  InputMethod _methodFromChannel(int ch) {
+    switch (ch) {
+      case 1:
+        return InputMethod.ch1;
+      case 2:
+        return InputMethod.ch2;
+      default:
+        return InputMethod.ch3;
+    }
+  }
 
-                      setState(() => showPopup = false);
-                    }),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: _popupBtn("Reset", () {
-                      userIdController[selectedChannel].clear();
-                      ageController[selectedChannel].clear();
-                      setState(() => gender[selectedChannel] = null);
-                    }),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: _popupBtn("Cancel", () {
-                      setState(() => showPopup = false);
-                    }),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
+  void _applyInputMethod() {
+    if (inputMethod == InputMethod.direct) return;
+
+    int sourceIndex;
+    switch (inputMethod) {
+      case InputMethod.ch1:
+        sourceIndex = 0;
+        break;
+      case InputMethod.ch2:
+        sourceIndex = 1;
+        break;
+      case InputMethod.ch3:
+        sourceIndex = 2;
+        break;
+      case InputMethod.direct:
+        return;
+    }
+
+    // 현재 선택된 채널 index
+    final targetIndex = selectedChannel;
+
+    userIdController[targetIndex].text = userIdController[sourceIndex].text;
+    ageController[targetIndex].text = ageController[sourceIndex].text;
+    gender[targetIndex] = gender[sourceIndex];
+    selectedItem[targetIndex] = selectedItem[sourceIndex];
+    sampleType[targetIndex] = sampleType[sourceIndex];
+  }
+
+  InputDecoration _dropdownDecoration() {
+    return InputDecoration(
+      contentPadding: const EdgeInsets.symmetric(horizontal: 12),
+      border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(8),
+        borderSide: const BorderSide(color: Colors.black12),
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(8),
+        borderSide: const BorderSide(color: Colors.blue),
       ),
     );
   }
@@ -657,6 +867,10 @@ class _RunTestState extends State<RunTest> {
       height: 44,
       child: DropdownButtonFormField<String>(
         value: selectedItem[selectedChannel],
+        validator: (v) {
+          if (v == null) return "Item을 선택해주세요";
+          return null;
+        },
         items:
             itemOptions
                 .map((e) => DropdownMenuItem<String>(value: e, child: Text(e)))
@@ -688,6 +902,7 @@ class _RunTestState extends State<RunTest> {
     return Expanded(
       child: InkWell(
         onTap: () => setState(() => gender[selectedChannel] = value),
+
         child: Container(
           height: 44,
           decoration: BoxDecoration(
