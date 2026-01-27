@@ -114,6 +114,7 @@ class _RunTestState extends State<RunTest> {
                           onTap: () {
                             setState(() {
                               selectedChannel = 2;
+                              inputMethod = InputMethod.direct;
                               currentPopup = PopupType.channelSingle;
                               showPopup = true;
                             });

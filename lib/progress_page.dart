@@ -139,6 +139,8 @@ class _ProgressPageState extends State<ProgressPage>
       socket!.writeln(requestData);
       await socket!.flush();
 
+      await Future.delayed(const Duration(milliseconds: 100));
+
       // CAM_CTRL 요청 전송 (촬영 시작)
       requestData = jsonEncode({
         "header": "F001",
