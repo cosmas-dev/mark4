@@ -379,15 +379,15 @@ class _RunTestState extends State<RunTest> {
                   const SizedBox(width: 12),
                   Expanded(
                     child: _popupBtn("Next", () {
-                      if (selectedItem.any((e) => e == null) ||
-                          sampleType.any((e) => e == null)) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text("모든 Item / Sample Type을 선택해주세요"),
-                          ),
-                        );
-                        return;
-                      }
+                      // if (selectedItem.any((e) => e == null) ||
+                      //     sampleType.any((e) => e == null)) {
+                      //   ScaffoldMessenger.of(context).showSnackBar(
+                      //     const SnackBar(
+                      //       content: Text("모든 Item / Sample Type을 선택해주세요"),
+                      //     ),
+                      //   );
+                      //   return;
+                      // }
 
                       final data = RunTestData(
                         userIds: userIdController.map((e) => e.text).toList(),
