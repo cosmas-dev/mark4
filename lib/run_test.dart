@@ -389,18 +389,57 @@ class _RunTestState extends State<RunTest> {
                       //   return;
                       // }
 
+                      // final data = RunTestData(
+                      //   userIds: userIdController.map((e) => e.text).toList(),
+                      //   ages:
+                      //       ageController
+                      //           .map((e) => int.tryParse(e.text))
+                      //           .toList(),
+                      //   genders:
+                      //       gender
+                      //           .map((g) => g == 0 ? 'Male' : 'Female')
+                      //           .toList(),
+                      //   items: selectedItem.cast<String>(),
+                      //   sampleTypes: sampleType.cast<String>(),
+                      // );
+                      final activeIndexes =
+                          List.generate(3, (i) => i)
+                              .where(
+                                (i) =>
+                                    userIdController[i].text.isNotEmpty ||
+                                    selectedItem[i] != null ||
+                                    sampleType[i] != null,
+                              )
+                              .toList();
+
                       final data = RunTestData(
-                        userIds: userIdController.map((e) => e.text).toList(),
+                        userIds:
+                            activeIndexes
+                                .map((i) => userIdController[i].text)
+                                .toList(),
                         ages:
-                            ageController
-                                .map((e) => int.tryParse(e.text))
+                            activeIndexes
+                                .map((i) => int.tryParse(ageController[i].text))
                                 .toList(),
                         genders:
-                            gender
-                                .map((g) => g == 0 ? 'Male' : 'Female')
+                            activeIndexes
+                                .map(
+                                  (i) =>
+                                      gender[i] == null
+                                          ? ''
+                                          : (gender[i] == 0
+                                              ? 'Male'
+                                              : 'Female'),
+                                )
                                 .toList(),
-                        items: selectedItem.cast<String>(),
-                        sampleTypes: sampleType.cast<String>(),
+                        items:
+                            activeIndexes
+                                .map((i) => selectedItem[i] ?? '')
+                                .toList(),
+                        sampleTypes:
+                            activeIndexes
+                                .map((i) => sampleType[i] ?? '')
+                                .toList(),
                       );
 
                       setState(() => showPopup = false);
