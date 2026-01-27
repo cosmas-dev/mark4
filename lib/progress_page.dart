@@ -133,8 +133,8 @@ class _ProgressPageState extends State<ProgressPage>
 
       // CAM_CTRL 요청 전송 (촬영 시작)
       var requestData = jsonEncode({
-        "header": "B001",
-        "body": {"CMD": "BL_CTRL", "DATA": "$lightNumber"},
+        "header": "F001",
+        "body": {"CMD": "AD_LED_CTRL", "DATA": "100,100"},
       });
       socket!.writeln(requestData);
       await socket!.flush();
@@ -213,15 +213,15 @@ class _ProgressPageState extends State<ProgressPage>
       print("📁 이미지 영구 저장 완료: $filePath");
 
       await Future.delayed(const Duration(milliseconds: 500));
-      var requestData = jsonEncode({
-        "header": "B001",
-        "body": {"CMD": "BL_CTRL", "DATA": "0"},
-      });
-      socket!.writeln(requestData);
-      await socket!.flush();
-      print("📡 BL_CTRL 요청 전송");
+      // var requestData = jsonEncode({
+      //   "header": "B001",
+      //   "body": {"CMD": "BL_CTRL", "DATA": "0"},
+      // });
+      // socket!.writeln(requestData);
+      // await socket!.flush();
+      // print("📡 BL_CTRL 요청 전송");
 
-      if (!mounted) return;
+      // if (!mounted) return;
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(
