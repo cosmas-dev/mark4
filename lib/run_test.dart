@@ -793,7 +793,7 @@ class _RunTestState extends State<RunTest> {
     final current = selectedChannel + 1; // 1~3
 
     final items = <DropdownMenuItem<InputMethod>>[
-      const DropdownMenuItem(value: InputMethod.direct, child: Text("직접입력")),
+      const DropdownMenuItem(value: InputMethod.direct, child: Text("Direct")),
     ];
 
     // 현재 채널 제외하고 나머지 채널만 추가

@@ -131,10 +131,18 @@ class _ProgressPageState extends State<ProgressPage>
         },
       );
 
-      // CAM_CTRL 요청 전송 (촬영 시작)
+      // SHUTTER 요청 전송 (셔터 속도 설정)
       var requestData = jsonEncode({
+        "header": "C001",
+        "body": {"CMD": "SHUTTER", "DATA": "200000"},
+      });
+      socket!.writeln(requestData);
+      await socket!.flush();
+
+      // CAM_CTRL 요청 전송 (촬영 시작)
+      requestData = jsonEncode({
         "header": "F001",
-        "body": {"CMD": "AD_LED_CTRL", "DATA": "100,100"},
+        "body": {"CMD": "AD_LED_CTRL", "DATA": "80,100"},
       });
       socket!.writeln(requestData);
       await socket!.flush();
