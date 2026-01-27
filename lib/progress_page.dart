@@ -134,7 +134,7 @@ class _ProgressPageState extends State<ProgressPage>
       // SHUTTER 요청 전송 (셔터 속도 설정)
       var requestData = jsonEncode({
         "header": "C001",
-        "body": {"CMD": "SHUTTER", "DATA": "500000"},
+        "body": {"CMD": "SHUTTER", "DATA": "900000"},
       });
       socket!.writeln(requestData);
       await socket!.flush();
