@@ -1,12 +1,14 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:mark4/class/run_test_data.dart';
 import 'package:mark4/components/current_time.dart';
 import 'package:mark4/home.dart';
 import 'package:mark4/progress_page.dart';
 
 class PreparingPage extends StatefulWidget {
-  const PreparingPage({super.key});
+  final RunTestData runTestData;
+  const PreparingPage({super.key, required this.runTestData});
 
   @override
   State<PreparingPage> createState() => _PreparingPageState();
@@ -281,9 +283,13 @@ class _PreparingPageState extends State<PreparingPage> {
           Expanded(
             child: InkWell(
               onTap: () {
-                Navigator.push(
+                Navigator.pushReplacement(
                   context,
-                  MaterialPageRoute(builder: (context) => ProgressPage()),
+                  MaterialPageRoute(
+                    builder:
+                        (context) =>
+                            ProgressPage(runTestData: widget.runTestData),
+                  ),
                 );
               },
               child: Container(

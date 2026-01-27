@@ -3,6 +3,7 @@ import 'dart:io';
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:mark4/DB/database_helper.dart';
+import 'package:mark4/class/user_data.dart';
 import 'package:mark4/components/current_time.dart';
 import 'package:mark4/preparing.dart';
 
@@ -376,11 +377,28 @@ class _RunTestState extends State<RunTest> {
                   const SizedBox(width: 12),
                   Expanded(
                     child: _popupBtn("Next", () {
+                      final data = RunTestData(
+                        userIds: userIdController.map((e) => e.text).toList(),
+                        ages:
+                            ageController
+                                .map((e) => int.tryParse(e.text))
+                                .toList(),
+                        genders:
+                            gender
+                                .map((g) => g == 0 ? 'Male' : 'Female')
+                                .toList(),
+                        items: selectedItem.map((e) => e!).toList(),
+                        sampleTypes: sampleType.map((e) => e!).toList(),
+                      );
+
+                      setState(() => showPopup = false);
+
                       showPopup = false;
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (context) => PreparingPage(),
+                          builder:
+                              (context) => PreparingPage(runTestData: data),
                         ),
                       );
                     }),
