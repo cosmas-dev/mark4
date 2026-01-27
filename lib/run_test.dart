@@ -775,6 +775,7 @@ class _RunTestState extends State<RunTest> {
                         if (!_formKey.currentState!.validate()) {
                           return; // 🔥 여기서 끝
                         }
+                        setState(() => showPopup = false);
                         final db = DatabaseHelper();
 
                         await db.insertRunTest(
@@ -787,8 +788,6 @@ class _RunTestState extends State<RunTest> {
                           gender:
                               gender[selectedChannel] == 0 ? 'Male' : 'Female',
                         );
-
-                        setState(() => showPopup = false);
                       }),
                     ),
                     const SizedBox(width: 12),
