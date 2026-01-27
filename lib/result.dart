@@ -5,8 +5,8 @@ import 'package:mark4/class/run_test_data.dart';
 
 class Result extends StatefulWidget {
   final RunTestData runTestData;
-  // final String imagePath;
-  const Result({super.key, required this.runTestData});
+  final String imagePath;
+  const Result({super.key, required this.runTestData, required this.imagePath});
 
   @override
   State<Result> createState() => _ResultState();
@@ -48,16 +48,15 @@ class _ResultState extends State<Result> {
           ),
         ],
       ),
-      child: Container(child: Text("test")),
-      // ClipRRect(
-      //   borderRadius: BorderRadius.circular(14),
-      //   child: Image.file(
-      //     File(widget.imagePath),
-      //     fit: BoxFit.contain,
-      //     height: 220, // ⬅️ 첫 번째 스샷 느낌
-      //     width: double.infinity,
-      //   ),
-      // ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(14),
+        child: Image.file(
+          File(widget.imagePath),
+          fit: BoxFit.contain,
+          height: 220, // ⬅️ 첫 번째 스샷 느낌
+          width: double.infinity,
+        ),
+      ),
     );
   }
 

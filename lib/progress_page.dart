@@ -226,10 +226,8 @@ class _ProgressPageState extends State<ProgressPage>
         context,
         MaterialPageRoute(
           builder:
-              (context) => Result(
-                runTestData: widget.runTestData,
-                // imagePath: filePath,
-              ),
+              (context) =>
+                  Result(runTestData: widget.runTestData, imagePath: filePath),
         ),
       );
     } catch (e) {
