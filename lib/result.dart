@@ -16,6 +16,11 @@ class _ResultState extends State<Result> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        iconTheme: const IconThemeData(color: Colors.black),
+      ),
       backgroundColor: const Color(0xFFEFF3F8),
       body: SafeArea(
         child: Column(
