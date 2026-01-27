@@ -4,7 +4,9 @@ import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:mark4/class/run_test_data.dart';
+import 'package:mark4/components/time_set.dart';
 import 'package:mark4/result.dart';
+import 'package:path_provider/path_provider.dart';
 
 class ProgressPage extends StatefulWidget {
   final RunTestData runTestData;
@@ -192,23 +194,23 @@ class _ProgressPageState extends State<ProgressPage>
 
   Future<void> saveImage(List<int> data) async {
     try {
-      // final directory = await getApplicationDocumentsDirectory();
-      // // ⭐ 촬영 시점 파일명 생성
-      // final fileName = makeFileName(_selectedType, widget.name);
-      // final filePath = "${directory.path}/$fileName";
+      final directory = await getApplicationDocumentsDirectory();
+      // ⭐ 촬영 시점 파일명 생성
+      final fileName = makeFileName("hi", "test");
+      final filePath = "${directory.path}/$fileName";
 
-      // File file = File(filePath);
-      // await file.writeAsBytes(data);
+      File file = File(filePath);
+      await file.writeAsBytes(data);
 
-      // setState(() {
-      //   imagePath = filePath;
-      // });
+      setState(() {
+        imagePath = filePath;
+      });
 
-      // // ✅ 갤러리에도 저장
+      // ✅ 갤러리에도 저장
       // final bytes = await file.readAsBytes();
       // await FlutterImageGallerySaver.saveImage(Uint8List.fromList(bytes));
 
-      // print("📁 이미지 영구 저장 완료: $filePath");
+      print("📁 이미지 영구 저장 완료: $filePath");
 
       await Future.delayed(const Duration(milliseconds: 500));
       var requestData = jsonEncode({

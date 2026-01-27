@@ -3,7 +3,7 @@ import 'dart:io';
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:mark4/DB/database_helper.dart';
-import 'package:mark4/class/user_data.dart';
+import 'package:mark4/class/run_test_data.dart';
 import 'package:mark4/components/current_time.dart';
 import 'package:mark4/preparing.dart';
 
@@ -377,6 +377,16 @@ class _RunTestState extends State<RunTest> {
                   const SizedBox(width: 12),
                   Expanded(
                     child: _popupBtn("Next", () {
+                      if (selectedItem.any((e) => e == null) ||
+                          sampleType.any((e) => e == null)) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text("모든 Item / Sample Type을 선택해주세요"),
+                          ),
+                        );
+                        return;
+                      }
+
                       final data = RunTestData(
                         userIds: userIdController.map((e) => e.text).toList(),
                         ages:
@@ -387,13 +397,12 @@ class _RunTestState extends State<RunTest> {
                             gender
                                 .map((g) => g == 0 ? 'Male' : 'Female')
                                 .toList(),
-                        items: selectedItem.map((e) => e!).toList(),
-                        sampleTypes: sampleType.map((e) => e!).toList(),
+                        items: selectedItem.cast<String>(),
+                        sampleTypes: sampleType.cast<String>(),
                       );
 
                       setState(() => showPopup = false);
 
-                      showPopup = false;
                       Navigator.push(
                         context,
                         MaterialPageRoute(
