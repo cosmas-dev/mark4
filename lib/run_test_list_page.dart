@@ -208,10 +208,12 @@ class _RunTestListPageState extends State<RunTestListPage> {
                 value: row.selected,
                 onChanged: (v) {
                   setState(() {
-                    row.selected = v!;
-
-                    // ✅ 현재 페이지가 전부 체크됐는지 확인
-                    headerChecked = pagedRows.every((r) => r.selected == true);
+                    for (final r in rows) {
+                      if (r.id == row.id) {
+                        r.selected = v!;
+                      }
+                    }
+                    headerChecked = pagedRows.every((r) => r.selected);
                   });
                 },
               ),
