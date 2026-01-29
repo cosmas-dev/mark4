@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:mark4/DB/run_test_json_store.dart';
 
 import 'package:mark4/class/run_test_data.dart';
 
@@ -14,6 +15,31 @@ class Result extends StatefulWidget {
 }
 
 class _ResultState extends State<Result> {
+  final store = RunTestJsonStore();
+  bool _saved = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _saveResultOnce();
+  }
+
+  Future<void> _saveResultOnce() async {
+    if (_saved) return;
+    _saved = true;
+
+    await store.save(
+      data: widget.runTestData,
+      imagePath: widget.imagePath,
+      result: _buildResultString(), // 예: "RSV 0.7 ng/mL"
+    );
+  }
+
+  String _buildResultString() {
+    // 👉 네 실제 결과 계산 로직에 맞게 수정
+    return "0.7 ng/mL";
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
