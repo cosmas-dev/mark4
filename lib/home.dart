@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:mark4/components/current_time.dart';
 import 'package:mark4/run_test.dart';
+import 'package:mark4/run_test_list_page.dart';
 
 class Home extends StatefulWidget {
   const Home({super.key});
@@ -165,17 +166,26 @@ class _HomeState extends State<Home> {
                                     final connected = hasMountedUsb();
 
                                     if (connected) {
-                                      ScaffoldMessenger.of(
+                                      Navigator.push(
                                         context,
-                                      ).showSnackBar(
-                                        SnackBar(content: Text('USB Found')),
+                                        MaterialPageRoute(
+                                          builder:
+                                              (context) => RunTestListPage(),
+                                        ),
                                       );
                                     } else {
-                                      ScaffoldMessenger.of(
+                                      // ScaffoldMessenger.of(
+                                      //   context,
+                                      // ).showSnackBar(
+                                      //   SnackBar(
+                                      //     content: Text('USB Not Found'),
+                                      //   ),
+                                      // );
+                                      Navigator.push(
                                         context,
-                                      ).showSnackBar(
-                                        SnackBar(
-                                          content: Text('USB Not Found'),
+                                        MaterialPageRoute(
+                                          builder:
+                                              (context) => RunTestListPage(),
                                         ),
                                       );
                                     }

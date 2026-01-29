@@ -2,7 +2,6 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:ui';
 import 'package:flutter/material.dart';
-import 'package:mark4/DB/database_helper.dart';
 import 'package:mark4/class/run_test_data.dart';
 
 import 'package:mark4/components/current_time.dart';
@@ -776,18 +775,6 @@ class _RunTestState extends State<RunTest> {
                           return; // 🔥 여기서 끝
                         }
                         setState(() => showPopup = false);
-                        final db = DatabaseHelper();
-
-                        await db.insertRunTest(
-                          channel: selectedChannel + 1,
-                          item: selectedItem[selectedChannel]!,
-                          userId: userIdController[selectedChannel].text,
-                          age: int.tryParse(
-                            ageController[selectedChannel].text,
-                          ),
-                          gender:
-                              gender[selectedChannel] == 0 ? 'Male' : 'Female',
-                        );
                       }),
                     ),
                     const SizedBox(width: 12),
