@@ -3,8 +3,10 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:mark4/components/current_time.dart';
+import 'package:mark4/components/window_listener.dart';
 import 'package:mark4/run_test.dart';
 import 'package:mark4/run_test_list_page.dart';
+import 'package:window_manager/window_manager.dart';
 
 class Home extends StatefulWidget {
   const Home({super.key});
@@ -14,6 +16,13 @@ class Home extends StatefulWidget {
 }
 
 class _HomeState extends State<Home> {
+  late final MyWindowListener _windowListener;
+  int _tapCount = 0;
+  DateTime? _lastTapTime;
+
+  static const int _requiredTaps = 7;
+  static const Duration _tapTimeout = Duration(seconds: 2);
+
   Socket? socket;
   final String iotDeviceIp = "192.168.0.72";
 
@@ -32,239 +41,275 @@ class _HomeState extends State<Home> {
   }
 
   @override
+  void initState() {
+    super.initState();
+    _windowListener = MyWindowListener();
+    windowManager.addListener(_windowListener);
+  }
+
+  @override
+  void dispose() {
+    windowManager.removeListener(_windowListener);
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return Container(
-      decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [Color(0xFFF7F9FC), Color(0xFFE3EBF6)],
-        ),
-      ),
-      child: Scaffold(
-        backgroundColor: Colors.transparent,
-        appBar: AppBar(
-          backgroundColor: Colors.transparent,
-          automaticallyImplyLeading: false,
-          title: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                getCurrentTime(),
-                style: const TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              Text(
-                getCurrentDate(),
-                style: const TextStyle(fontSize: 16, color: Colors.black54),
-              ),
-            ],
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: () async {
+        final now = DateTime.now();
+
+        if (_lastTapTime == null ||
+            now.difference(_lastTapTime!) > _tapTimeout) {
+          // 시간 초과 → 카운트 초기화
+          _tapCount = 1;
+        } else {
+          _tapCount++;
+        }
+
+        _lastTapTime = now;
+
+        if (_tapCount >= _requiredTaps) {
+          _tapCount = 0;
+          await _exitFullscreenByTap();
+        }
+      },
+      child: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [Color(0xFFF7F9FC), Color(0xFFE3EBF6)],
           ),
-          actions: [
-            InkWell(
-              onTap: () {
-                _showPowerPopup(context);
-              },
-              child: Image.asset('images/powerButton.png', scale: 7),
-            ),
-            const SizedBox(width: 15),
-          ],
         ),
-        body: SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-            child: Column(
+        child: Scaffold(
+          backgroundColor: Colors.transparent,
+          appBar: AppBar(
+            backgroundColor: Colors.transparent,
+            automaticallyImplyLeading: false,
+            title: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const SizedBox(height: 40),
+                Text(
+                  getCurrentTime(),
+                  style: const TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                Text(
+                  getCurrentDate(),
+                  style: const TextStyle(fontSize: 16, color: Colors.black54),
+                ),
+              ],
+            ),
+            actions: [
+              InkWell(
+                onTap: () {
+                  _showPowerPopup(context);
+                },
+                child: Image.asset('images/powerButton.png', scale: 7),
+              ),
+              const SizedBox(width: 15),
+            ],
+          ),
+          body: SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const SizedBox(height: 40),
 
-                // ------------- RUN TEST + 하단 2개 버튼 -------------
-                Expanded(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      // RUN TEST (대형 버튼)
-                      Container(
-                        height: 210,
-                        width: double.infinity,
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(18),
-                          gradient: const LinearGradient(
-                            begin: Alignment.topCenter,
-                            end: Alignment.bottomCenter,
-                            colors: [Color(0xFF2F89FF), Color(0xFF1062F3)],
+                  // ------------- RUN TEST + 하단 2개 버튼 -------------
+                  Expanded(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        // RUN TEST (대형 버튼)
+                        Container(
+                          height: 210,
+                          width: double.infinity,
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(18),
+                            gradient: const LinearGradient(
+                              begin: Alignment.topCenter,
+                              end: Alignment.bottomCenter,
+                              colors: [Color(0xFF2F89FF), Color(0xFF1062F3)],
+                            ),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withAlpha(20),
+                                blurRadius: 8,
+                                offset: const Offset(0, 4),
+                              ),
+                            ],
                           ),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withAlpha(20),
-                              blurRadius: 8,
-                              offset: const Offset(0, 4),
+                          child: Material(
+                            color: Colors.transparent,
+                            child: InkWell(
+                              borderRadius: BorderRadius.circular(18),
+                              onTap: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => RunTest(),
+                                  ),
+                                );
+                              },
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Image.asset(
+                                    'images/run_test_icon.png',
+                                    scale: 3,
+                                    color: Colors.white,
+                                  ),
+                                  SizedBox(height: 12),
+                                  Text(
+                                    "RUN TEST",
+                                    style: TextStyle(
+                                      fontSize: 30,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+
+                        const SizedBox(height: 22),
+
+                        Row(
+                          children: [
+                            // TEST RESULT
+                            Expanded(
+                              child: Container(
+                                height: 100,
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(18),
+                                  gradient: const LinearGradient(
+                                    begin: Alignment.topCenter,
+                                    end: Alignment.bottomCenter,
+                                    colors: [
+                                      Color(0xFF33D2C5),
+                                      Color(0xFF28B6A7),
+                                    ],
+                                  ),
+                                ),
+                                child: Material(
+                                  color: Colors.transparent,
+                                  child: InkWell(
+                                    borderRadius: BorderRadius.circular(18),
+                                    onTap: () {
+                                      final connected = hasMountedUsb();
+
+                                      if (connected) {
+                                        Navigator.push(
+                                          context,
+                                          MaterialPageRoute(
+                                            builder:
+                                                (context) => RunTestListPage(),
+                                          ),
+                                        );
+                                      } else {
+                                        // ScaffoldMessenger.of(
+                                        //   context,
+                                        // ).showSnackBar(
+                                        //   SnackBar(
+                                        //     content: Text('USB Not Found'),
+                                        //   ),
+                                        // );
+                                        Navigator.push(
+                                          context,
+                                          MaterialPageRoute(
+                                            builder:
+                                                (context) => RunTestListPage(),
+                                          ),
+                                        );
+                                      }
+                                    },
+                                    child: Column(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.center,
+                                      children: [
+                                        Image.asset(
+                                          'images/test_result_icon.png',
+                                          scale: 5,
+                                          color: Colors.white,
+                                        ),
+                                        SizedBox(height: 6),
+                                        Text(
+                                          "TEST RESULT",
+                                          style: TextStyle(
+                                            fontSize: 18,
+                                            fontWeight: FontWeight.bold,
+                                            color: Colors.white,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+
+                            const SizedBox(width: 20),
+
+                            // SETTING
+                            Expanded(
+                              child: Container(
+                                height: 100,
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(18),
+                                  gradient: const LinearGradient(
+                                    begin: Alignment.topCenter,
+                                    end: Alignment.bottomCenter,
+                                    colors: [
+                                      Color(0xFF7D7D7D),
+                                      Color(0xFF555555),
+                                    ],
+                                  ),
+                                ),
+                                child: Material(
+                                  color: Colors.transparent,
+                                  child: InkWell(
+                                    borderRadius: BorderRadius.circular(18),
+                                    onTap: () {},
+                                    child: Column(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.center,
+                                      children: [
+                                        Image.asset(
+                                          'images/setting_icon.png',
+                                          scale: 6,
+                                          color: Colors.white,
+                                        ),
+                                        SizedBox(height: 6),
+                                        Text(
+                                          "SETTING",
+                                          style: TextStyle(
+                                            fontSize: 18,
+                                            fontWeight: FontWeight.bold,
+                                            color: Colors.white,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              ),
                             ),
                           ],
                         ),
-                        child: Material(
-                          color: Colors.transparent,
-                          child: InkWell(
-                            borderRadius: BorderRadius.circular(18),
-                            onTap: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) => RunTest(),
-                                ),
-                              );
-                            },
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Image.asset(
-                                  'images/run_test_icon.png',
-                                  scale: 3,
-                                  color: Colors.white,
-                                ),
-                                SizedBox(height: 12),
-                                Text(
-                                  "RUN TEST",
-                                  style: TextStyle(
-                                    fontSize: 30,
-                                    fontWeight: FontWeight.bold,
-                                    color: Colors.white,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ),
-
-                      const SizedBox(height: 22),
-
-                      Row(
-                        children: [
-                          // TEST RESULT
-                          Expanded(
-                            child: Container(
-                              height: 100,
-                              decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(18),
-                                gradient: const LinearGradient(
-                                  begin: Alignment.topCenter,
-                                  end: Alignment.bottomCenter,
-                                  colors: [
-                                    Color(0xFF33D2C5),
-                                    Color(0xFF28B6A7),
-                                  ],
-                                ),
-                              ),
-                              child: Material(
-                                color: Colors.transparent,
-                                child: InkWell(
-                                  borderRadius: BorderRadius.circular(18),
-                                  onTap: () {
-                                    final connected = hasMountedUsb();
-
-                                    if (connected) {
-                                      Navigator.push(
-                                        context,
-                                        MaterialPageRoute(
-                                          builder:
-                                              (context) => RunTestListPage(),
-                                        ),
-                                      );
-                                    } else {
-                                      // ScaffoldMessenger.of(
-                                      //   context,
-                                      // ).showSnackBar(
-                                      //   SnackBar(
-                                      //     content: Text('USB Not Found'),
-                                      //   ),
-                                      // );
-                                      Navigator.push(
-                                        context,
-                                        MaterialPageRoute(
-                                          builder:
-                                              (context) => RunTestListPage(),
-                                        ),
-                                      );
-                                    }
-                                  },
-                                  child: Column(
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    children: [
-                                      Image.asset(
-                                        'images/test_result_icon.png',
-                                        scale: 5,
-                                        color: Colors.white,
-                                      ),
-                                      SizedBox(height: 6),
-                                      Text(
-                                        "TEST RESULT",
-                                        style: TextStyle(
-                                          fontSize: 18,
-                                          fontWeight: FontWeight.bold,
-                                          color: Colors.white,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ),
-
-                          const SizedBox(width: 20),
-
-                          // SETTING
-                          Expanded(
-                            child: Container(
-                              height: 100,
-                              decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(18),
-                                gradient: const LinearGradient(
-                                  begin: Alignment.topCenter,
-                                  end: Alignment.bottomCenter,
-                                  colors: [
-                                    Color(0xFF7D7D7D),
-                                    Color(0xFF555555),
-                                  ],
-                                ),
-                              ),
-                              child: Material(
-                                color: Colors.transparent,
-                                child: InkWell(
-                                  borderRadius: BorderRadius.circular(18),
-                                  onTap: () {},
-                                  child: Column(
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    children: [
-                                      Image.asset(
-                                        'images/setting_icon.png',
-                                        scale: 6,
-                                        color: Colors.white,
-                                      ),
-                                      SizedBox(height: 6),
-                                      Text(
-                                        "SETTING",
-                                        style: TextStyle(
-                                          fontSize: 18,
-                                          fontWeight: FontWeight.bold,
-                                          color: Colors.white,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         ),
@@ -382,6 +427,12 @@ class _HomeState extends State<Home> {
       socket?.close();
     } catch (e) {
       print("❌ IoT 기기 연결 실패: $e");
+    }
+  }
+
+  Future<void> _exitFullscreenByTap() async {
+    if (!Platform.isAndroid && !Platform.isIOS) {
+      await windowManager.setFullScreen(false);
     }
   }
 }
