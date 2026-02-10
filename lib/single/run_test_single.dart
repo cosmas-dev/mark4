@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
+import 'dart:math';
 import 'dart:ui';
 import 'package:flutter/material.dart';
 
@@ -14,6 +15,7 @@ class RunTestSingle extends StatefulWidget {
 }
 
 class _RunTestSingleState extends State<RunTestSingle> {
+  final FocusNode _focusNode = FocusNode();
   final _formKey = GlobalKey<FormState>();
   int openClose = 1;
   bool showPopup = false;
@@ -29,6 +31,27 @@ class _RunTestSingleState extends State<RunTestSingle> {
   String? sampleType;
   final List<String> itemOptions = ['Flu', 'COVID19', 'RSV'];
   final List<String> sampleTypeOptions = ['Blood', 'Saliva', 'Nasal'];
+
+  void _showKeyboard() {
+    if (Platform.isLinux) {
+      Process.run('dbus-send', [
+        '--type=method_call',
+        '--dest=org.onboard.Onboard',
+        '/org/onboard/Onboard/Keyboard',
+        'org.onboard.Onboard.Keyboard.Show',
+      ]);
+    }
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _focusNode.addListener(() {
+      if (_focusNode.hasFocus) {
+        _showKeyboard();
+      }
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -73,7 +96,7 @@ class _RunTestSingleState extends State<RunTestSingle> {
                           showPopup = true;
                         });
                       },
-                      child: Image.asset("images/kit1.png", scale: 5),
+                      child: Image.asset("images/kit1.png", scale: 4),
                     ),
                   ),
                   const Padding(
@@ -130,14 +153,14 @@ class _RunTestSingleState extends State<RunTestSingle> {
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Image.asset("images/holder_icon.png", scale: 4),
+                      Image.asset("images/holder_icon.png", scale: 3),
                       const SizedBox(height: 4),
                       Text(
                         "Holder\nIn/Out",
                         textAlign: TextAlign.center,
                         style: const TextStyle(
                           color: Colors.white,
-                          fontSize: 20,
+                          fontSize: 40,
                           height: 1.1,
                           fontWeight: FontWeight.bold,
                         ),
@@ -176,14 +199,14 @@ class _RunTestSingleState extends State<RunTestSingle> {
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Image.asset('images/start_icon.png', scale: 4),
+                      Image.asset('images/start_icon.png', scale: 3),
                       const SizedBox(height: 10),
                       Text(
                         "Start",
                         textAlign: TextAlign.center,
                         style: const TextStyle(
                           color: Colors.white,
-                          fontSize: 25,
+                          fontSize: 50,
                           height: 1.1,
                           fontWeight: FontWeight.bold,
                         ),
@@ -249,7 +272,7 @@ class _RunTestSingleState extends State<RunTestSingle> {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        height: 50,
+        height: 80,
         decoration: BoxDecoration(
           gradient: const LinearGradient(
             colors: [Color(0xFF6D6D6D), Color(0xFF464646)],
@@ -261,7 +284,11 @@ class _RunTestSingleState extends State<RunTestSingle> {
         child: Center(
           child: Text(
             text,
-            style: const TextStyle(color: Colors.white, fontSize: 25),
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 30,
+              fontWeight: FontWeight.bold,
+            ),
           ),
         ),
       ),
@@ -301,7 +328,7 @@ class _RunTestSingleState extends State<RunTestSingle> {
                   "CH-1 information",
                   style: TextStyle(
                     color: Colors.white,
-                    fontSize: 25,
+                    fontSize: 40,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
@@ -321,17 +348,38 @@ class _RunTestSingleState extends State<RunTestSingle> {
                               sampleTypeOptions.contains(sampleType)
                                   ? sampleType
                                   : null,
-                          hint: const Text("Select"),
+                          hint: Text(
+                            "Select",
+                            style: const TextStyle(fontSize: 20),
+                          ),
                           validator: (v) {
                             if (v == null) return "Sample Type을 선택해주세요";
                             return null;
+                          },
+                          // 🔥 선택된 값 표시용
+                          selectedItemBuilder: (context) {
+                            return itemOptions.map((e) {
+                              return Align(
+                                alignment: Alignment.centerLeft,
+                                child: Text(
+                                  e,
+                                  style: const TextStyle(
+                                    fontSize: 40,
+                                    height: 0.5, // 👈 중요
+                                  ),
+                                ),
+                              );
+                            }).toList();
                           },
                           items:
                               sampleTypeOptions
                                   .map(
                                     (e) => DropdownMenuItem(
                                       value: e,
-                                      child: Text(e),
+                                      child: Text(
+                                        e,
+                                        style: const TextStyle(fontSize: 40),
+                                      ),
                                     ),
                                   )
                                   .toList(),
@@ -340,7 +388,12 @@ class _RunTestSingleState extends State<RunTestSingle> {
                               sampleType = v;
                             });
                           },
-                          decoration: _dropdownDecoration(),
+                          decoration: _dropdownDecoration().copyWith(
+                            contentPadding: EdgeInsets.symmetric(
+                              vertical: 20,
+                              horizontal: 12,
+                            ),
+                          ),
                         ),
                       ],
                     ),
@@ -367,9 +420,9 @@ class _RunTestSingleState extends State<RunTestSingle> {
                           children: [
                             Row(
                               children: [
-                                _genderBtn("Male", 0),
+                                _genderBtn("Male"),
                                 const SizedBox(width: 12),
-                                _genderBtn("Female", 1),
+                                _genderBtn("Female"),
                               ],
                             ),
                             if (state.hasError)
@@ -457,13 +510,13 @@ class _RunTestSingleState extends State<RunTestSingle> {
   Widget _label(String text) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 6, top: 14),
-      child: Text(text, style: const TextStyle(fontSize: 20)),
+      child: Text(text, style: const TextStyle(fontSize: 30)),
     );
   }
 
   Widget _input(TextEditingController c, {bool isNumber = false}) {
     return Container(
-      height: 50,
+      height: 70,
       padding: const EdgeInsets.symmetric(horizontal: 12),
       decoration: BoxDecoration(
         border: Border.all(color: Colors.black12),
@@ -473,58 +526,74 @@ class _RunTestSingleState extends State<RunTestSingle> {
         controller: c,
         keyboardType: isNumber ? TextInputType.number : null,
         decoration: const InputDecoration(border: InputBorder.none),
+        style: const TextStyle(fontSize: 35),
       ),
     );
   }
 
   Widget _dropdown() {
-    return SizedBox(
-      height: 50,
-      child: DropdownButtonFormField<String>(
-        value: selectedItem,
-        validator: (v) {
-          if (v == null) return "Item을 선택해주세요";
-          return null;
-        },
-        items:
-            itemOptions
-                .map(
-                  (e) => DropdownMenuItem<String>(
-                    value: e,
-                    child: Text(e, style: const TextStyle(fontSize: 20)),
-                  ),
-                )
-                .toList(),
-        onChanged: (v) {
-          setState(() {
-            selectedItem = v;
-          });
-        },
-        decoration: InputDecoration(
-          contentPadding: const EdgeInsets.symmetric(horizontal: 12),
-          border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-          enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(8),
-            borderSide: const BorderSide(color: Colors.black12),
-          ),
-          focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(8),
-            borderSide: const BorderSide(color: Colors.blue),
-          ),
+    return DropdownButtonFormField<String>(
+      value: selectedItem,
+      validator: (v) {
+        if (v == null) return "Item을 선택해주세요";
+        return null;
+      },
+      // 🔥 선택된 값 표시용
+      selectedItemBuilder: (context) {
+        return itemOptions.map((e) {
+          return Align(
+            alignment: Alignment.centerLeft,
+            child: Text(
+              e,
+              style: const TextStyle(
+                fontSize: 40,
+                height: 0.5, // 👈 중요
+              ),
+            ),
+          );
+        }).toList();
+      },
+      items:
+          itemOptions
+              .map(
+                (e) => DropdownMenuItem<String>(
+                  value: e,
+                  child: Text(e, style: const TextStyle(fontSize: 40)),
+                ),
+              )
+              .toList(),
+      onChanged: (v) {
+        setState(() {
+          selectedItem = v;
+        });
+      },
+      decoration: InputDecoration(
+        contentPadding: const EdgeInsets.symmetric(
+          vertical: 20,
+          horizontal: 12,
         ),
-        icon: const Icon(Icons.arrow_drop_down),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(8),
+          borderSide: const BorderSide(color: Colors.black12),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(8),
+          borderSide: const BorderSide(color: Colors.blue),
+        ),
       ),
+      icon: const Icon(Icons.arrow_drop_down),
     );
   }
 
-  Widget _genderBtn(String text, int value) {
+  Widget _genderBtn(String text) {
     final selected = gender == text;
     return Expanded(
       child: InkWell(
         onTap: () => setState(() => gender = text),
 
         child: Container(
-          height: 50,
+          height: 80,
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(8),
             border: Border.all(color: selected ? Colors.blue : Colors.black12),
@@ -535,7 +604,7 @@ class _RunTestSingleState extends State<RunTestSingle> {
               style: TextStyle(
                 fontWeight: FontWeight.w600,
                 color: selected ? Colors.blue : Colors.black,
-                fontSize: 20,
+                fontSize: 35,
               ),
             ),
           ),

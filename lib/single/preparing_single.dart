@@ -156,7 +156,7 @@ class _PreparingPageSingleState extends State<PreparingPageSingle> {
         const Text(
           "Preparing",
           style: TextStyle(
-            fontSize: 30,
+            fontSize: 40,
             color: Color(0xFF1A2A4A),
             fontWeight: FontWeight.w700,
           ),
@@ -165,7 +165,7 @@ class _PreparingPageSingleState extends State<PreparingPageSingle> {
 
         const Text(
           "1. With a saliva collector\n   saliva as shown in the picture below",
-          style: TextStyle(fontSize: 25, height: 1.4, color: Color(0xFF1A2A4A)),
+          style: TextStyle(fontSize: 30, height: 1.4, color: Color(0xFF1A2A4A)),
         ),
         const SizedBox(height: 25),
         // Row(
@@ -195,7 +195,7 @@ class _PreparingPageSingleState extends State<PreparingPageSingle> {
         const Text(
           "Preparing",
           style: TextStyle(
-            fontSize: 30,
+            fontSize: 40,
             color: Color(0xFF1A2A4A),
             fontWeight: FontWeight.w700,
           ),
@@ -204,7 +204,7 @@ class _PreparingPageSingleState extends State<PreparingPageSingle> {
 
         const Text(
           "2. Press the collector into the\n   multi-diagnosiskit Please add \"saliva\"",
-          style: TextStyle(fontSize: 25, height: 1.4, color: Color(0xFF1A2A4A)),
+          style: TextStyle(fontSize: 30, height: 1.4, color: Color(0xFF1A2A4A)),
         ),
         const SizedBox(height: 25),
         Center(child: Image.asset('images/4.png', scale: 2.5)),
@@ -219,7 +219,7 @@ class _PreparingPageSingleState extends State<PreparingPageSingle> {
         const Text(
           "Preparing",
           style: TextStyle(
-            fontSize: 30,
+            fontSize: 40,
             color: Color(0xFF1A2A4A),
             fontWeight: FontWeight.w700,
           ),
@@ -228,17 +228,17 @@ class _PreparingPageSingleState extends State<PreparingPageSingle> {
 
         const Text(
           "3. Please select Lorem Ipsum",
-          style: TextStyle(fontSize: 25, height: 1.4, color: Color(0xFF1A2A4A)),
+          style: TextStyle(fontSize: 30, height: 1.4, color: Color(0xFF1A2A4A)),
         ),
         const SizedBox(height: 25),
         Text(
           "• If the test is completed from outside, press",
-          style: const TextStyle(fontSize: 25, color: Color(0xFF1A2A4A)),
+          style: const TextStyle(fontSize: 30, color: Color(0xFF1A2A4A)),
         ),
         const SizedBox(height: 12),
         const Text(
           "• If you want the test time to be completed\n  within the Reader, press",
-          style: TextStyle(fontSize: 25, color: Color(0xFF1A2A4A)),
+          style: TextStyle(fontSize: 30, color: Color(0xFF1A2A4A)),
         ),
       ],
     );
@@ -284,13 +284,13 @@ class _PreparingPageSingleState extends State<PreparingPageSingle> {
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(Icons.play_arrow, color: Colors.white, size: 50),
+                      Icon(Icons.play_arrow, color: Colors.white, size: 60),
                       SizedBox(height: 4),
                       Text(
                         "Run",
                         style: TextStyle(
                           color: Colors.white,
-                          fontSize: 30,
+                          fontSize: 50,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
@@ -314,7 +314,7 @@ class _PreparingPageSingleState extends State<PreparingPageSingle> {
                   "Auto Contdown",
                   style: TextStyle(
                     color: Colors.white,
-                    fontSize: 30,
+                    fontSize: 45,
                     fontWeight: FontWeight.bold,
                   ),
                 ),

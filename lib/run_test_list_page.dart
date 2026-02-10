@@ -47,7 +47,7 @@ class _RunTestListPageState extends State<RunTestListPage> {
     final buffer = StringBuffer();
 
     // Header
-    buffer.writeln('Date,User ID,Item,Result');
+    buffer.writeln('Date,Name,Item,Result');
 
     for (final r in rows) {
       final date =
@@ -187,7 +187,7 @@ class _RunTestListPageState extends State<RunTestListPage> {
             ),
           ),
           const _HeaderCell('Date'),
-          const _HeaderCell('User ID'),
+          const _HeaderCell('Name'),
           const _HeaderCell('Item'),
           const _HeaderCell('Result'),
         ],
@@ -241,7 +241,7 @@ class _RunTestListPageState extends State<RunTestListPage> {
           child: Center(
             child: Text(
               '${page + 1}/$totalPages',
-              style: TextStyle(fontWeight: FontWeight.w600, fontSize: 25),
+              style: TextStyle(fontWeight: FontWeight.w600, fontSize: 30),
             ),
           ),
         ),
@@ -261,7 +261,7 @@ class _RunTestListPageState extends State<RunTestListPage> {
         borderRadius: BorderRadius.circular(8),
         child: Container(
           width: 150,
-          height: 60,
+          height: 70,
           decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.circular(8),
@@ -303,14 +303,14 @@ class _RunTestListPageState extends State<RunTestListPage> {
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Image.asset("images/holder_icon.png", scale: 4),
+                      Image.asset("images/holder_icon.png", scale: 3),
                       const SizedBox(height: 4),
                       Text(
                         "All Copy",
                         textAlign: TextAlign.center,
                         style: const TextStyle(
                           color: Colors.white,
-                          fontSize: 25,
+                          fontSize: 40,
                           height: 1.1,
                           fontWeight: FontWeight.bold,
                         ),
@@ -337,14 +337,14 @@ class _RunTestListPageState extends State<RunTestListPage> {
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Image.asset('images/start_icon.png', scale: 4),
+                      Image.asset('images/start_icon.png', scale: 3),
                       const SizedBox(height: 10),
                       Text(
                         "Sel Copy",
                         textAlign: TextAlign.center,
                         style: const TextStyle(
                           color: Colors.white,
-                          fontSize: 25,
+                          fontSize: 40,
                           height: 1.1,
                           fontWeight: FontWeight.bold,
                         ),
@@ -365,14 +365,14 @@ class _RunTestListPageState extends State<RunTestListPage> {
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Image.asset('images/start_icon.png', scale: 4),
+                      Image.asset('images/start_icon.png', scale: 3),
                       const SizedBox(height: 10),
                       const Text(
                         "Delete",
                         textAlign: TextAlign.center,
                         style: TextStyle(
                           color: Colors.white,
-                          fontSize: 25,
+                          fontSize: 40,
                           height: 1.1,
                           fontWeight: FontWeight.bold,
                         ),
@@ -768,7 +768,7 @@ class _HeaderCell extends StatelessWidget {
         textAlign: TextAlign.center,
         style: const TextStyle(
           color: Colors.white,
-          fontSize: 25,
+          fontSize: 30,
           fontWeight: FontWeight.w500,
         ),
       ),
