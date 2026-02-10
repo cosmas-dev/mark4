@@ -22,7 +22,12 @@ class RunTestJsonStore {
   }
 
   Future<void> save({
-    required RunTestData data,
+    // required RunTestData data,
+    required String name,
+    required String age,
+    required String gender,
+    required String item,
+    required String sampleType,
     required String imagePath,
     required String result,
   }) async {
@@ -30,8 +35,13 @@ class RunTestJsonStore {
 
     list.add({
       'id': const Uuid().v4(),
+      'userName': name,
+      'age': age,
+      'gender': gender,
+      'item': item,
+      'sampleType': sampleType,
       'imagePath': imagePath,
-      'runTestData': data.toJson(),
+      // 'runTestData': data.toJson(),
       'result': result,
       'createdAt': DateTime.now().toIso8601String(),
       'synced': false,

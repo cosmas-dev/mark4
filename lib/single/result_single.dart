@@ -35,13 +35,11 @@ class _ResultSingleState extends State<ResultSingle> {
     _saved = true;
 
     await store.save(
-      data: RunTestData(
-        userName: [widget.userName],
-        ages: [widget.age],
-        genders: [widget.gender],
-        items: [widget.selectedItem],
-        sampleTypes: [widget.sampleType],
-      ),
+      name: widget.userName,
+      age: widget.age,
+      gender: widget.gender,
+      item: widget.selectedItem,
+      sampleType: widget.sampleType,
       imagePath: widget.imagePath,
       result: _buildResultString(), // 예: "RSV 0.7 ng/mL"
     );

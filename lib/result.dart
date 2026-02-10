@@ -1,107 +1,107 @@
-import 'dart:io';
+// import 'dart:io';
 
-import 'package:flutter/material.dart';
-import 'package:mark4/DB/run_test_json_store.dart';
+// import 'package:flutter/material.dart';
+// import 'package:mark4/DB/run_test_json_store.dart';
 
-import 'package:mark4/class/run_test_data.dart';
+// import 'package:mark4/class/run_test_data.dart';
 
-class Result extends StatefulWidget {
-  final RunTestData runTestData;
-  final String imagePath;
-  const Result({super.key, required this.runTestData, required this.imagePath});
+// class Result extends StatefulWidget {
+//   final RunTestData runTestData;
+//   final String imagePath;
+//   const Result({super.key, required this.runTestData, required this.imagePath});
 
-  @override
-  State<Result> createState() => _ResultState();
-}
+//   @override
+//   State<Result> createState() => _ResultState();
+// }
 
-class _ResultState extends State<Result> {
-  final store = RunTestJsonStore();
-  bool _saved = false;
+// class _ResultState extends State<Result> {
+//   final store = RunTestJsonStore();
+//   bool _saved = false;
 
-  @override
-  void initState() {
-    super.initState();
-    _saveResultOnce();
-  }
+//   @override
+//   void initState() {
+//     super.initState();
+//     _saveResultOnce();
+//   }
 
-  Future<void> _saveResultOnce() async {
-    if (_saved) return;
-    _saved = true;
+//   Future<void> _saveResultOnce() async {
+//     if (_saved) return;
+//     _saved = true;
 
-    await store.save(
-      data: widget.runTestData,
-      imagePath: widget.imagePath,
-      result: _buildResultString(), // 예: "RSV 0.7 ng/mL"
-    );
-  }
+//     await store.save(
+//       data: widget.runTestData,
+//       imagePath: widget.imagePath,
+//       result: _buildResultString(), // 예: "RSV 0.7 ng/mL"
+//     );
+//   }
 
-  String _buildResultString() {
-    // 👉 네 실제 결과 계산 로직에 맞게 수정
-    return "0.7 ng/mL";
-  }
+//   String _buildResultString() {
+//     // 👉 네 실제 결과 계산 로직에 맞게 수정
+//     return "0.7 ng/mL";
+//   }
 
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        iconTheme: const IconThemeData(color: Colors.black),
-      ),
-      backgroundColor: const Color(0xFFEFF3F8),
-      body: SafeArea(
-        child: Column(
-          children: [
-            /// ✅ 1. 상단 이미지 영역
-            _capturedImage(),
+//   @override
+//   Widget build(BuildContext context) {
+//     return Scaffold(
+//       appBar: AppBar(
+//         backgroundColor: Colors.transparent,
+//         elevation: 0,
+//         iconTheme: const IconThemeData(color: Colors.black),
+//       ),
+//       backgroundColor: const Color(0xFFEFF3F8),
+//       body: SafeArea(
+//         child: Column(
+//           children: [
+//             /// ✅ 1. 상단 이미지 영역
+//             _capturedImage(),
 
-            const SizedBox(height: 12),
+//             const SizedBox(height: 12),
 
-            /// ✅ 2. 기존 결과 UI
-            Expanded(child: _resultContent()),
-          ],
-        ),
-      ),
-    );
-  }
+//             /// ✅ 2. 기존 결과 UI
+//             Expanded(child: _resultContent()),
+//           ],
+//         ),
+//       ),
+//     );
+//   }
 
-  Widget _capturedImage() {
-    return Container(
-      margin: const EdgeInsets.all(16),
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withAlpha(20),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(14),
-        child: Image.file(
-          File(widget.imagePath),
-          fit: BoxFit.contain,
-          height: 220, // ⬅️ 첫 번째 스샷 느낌
-          width: double.infinity,
-        ),
-      ),
-    );
-  }
+//   Widget _capturedImage() {
+//     return Container(
+//       margin: const EdgeInsets.all(16),
+//       padding: const EdgeInsets.all(12),
+//       decoration: BoxDecoration(
+//         color: Colors.white,
+//         borderRadius: BorderRadius.circular(20),
+//         boxShadow: [
+//           BoxShadow(
+//             color: Colors.black.withAlpha(20),
+//             blurRadius: 10,
+//             offset: const Offset(0, 4),
+//           ),
+//         ],
+//       ),
+//       child: ClipRRect(
+//         borderRadius: BorderRadius.circular(14),
+//         child: Image.file(
+//           File(widget.imagePath),
+//           fit: BoxFit.contain,
+//           height: 220, // ⬅️ 첫 번째 스샷 느낌
+//           width: double.infinity,
+//         ),
+//       ),
+//     );
+//   }
 
-  Widget _resultContent() {
-    return SingleChildScrollView(
-      child: Column(
-        children: [
-          // 🔽 지금 쓰고 있는 결과 UI 전체를 여기로 이동
-          // 예: CH-1 / CH-2 / CH-3 카드
-          // completed 텍스트
-          // 하단 버튼들
-        ],
-      ),
-    );
-  }
-}
+//   Widget _resultContent() {
+//     return SingleChildScrollView(
+//       child: Column(
+//         children: [
+//           // 🔽 지금 쓰고 있는 결과 UI 전체를 여기로 이동
+//           // 예: CH-1 / CH-2 / CH-3 카드
+//           // completed 텍스트
+//           // 하단 버튼들
+//         ],
+//       ),
+//     );
+//   }
+// }
