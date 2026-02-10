@@ -523,6 +523,7 @@ class _RunTestSingleState extends State<RunTestSingle> {
         borderRadius: BorderRadius.circular(8),
       ),
       child: TextField(
+        focusNode: _focusNode,
         controller: c,
         keyboardType: isNumber ? TextInputType.number : null,
         decoration: const InputDecoration(border: InputBorder.none),
