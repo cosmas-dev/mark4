@@ -393,18 +393,17 @@ class _RunTestListPageState extends State<RunTestListPage> {
     rows = [];
 
     for (final e in raw) {
-      final data = RunTestData.fromJson(e['runTestData']);
-      for (int i = 0; i < data.items.length; i++) {
-        rows.add(
-          RunTestRow(
-            id: e['id'],
-            date: DateTime.parse(e['createdAt']),
-            userName: data.userName[i],
-            item: data.items[i],
-            result: e['result'] ?? '0 ng/mL',
-          ),
-        );
-      }
+      rows.add(
+        RunTestRow(
+          id: e['id'],
+          date: DateTime.parse(e['createdAt']),
+          userName: e['userName'] ?? 'Unknown',
+          // age: e['age'] ?? 'Unknown',
+          // gender: e['gender'] ?? 'Unknown',
+          item: e['item'] ?? 'Unknown',
+          result: e['result'] ?? '0 ng/mL',
+        ),
+      );
     }
 
     setState(() {});
