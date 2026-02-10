@@ -6,6 +6,7 @@ import 'package:mark4/components/current_time.dart';
 import 'package:mark4/components/window_listener.dart';
 import 'package:mark4/run_test.dart';
 import 'package:mark4/run_test_list_page.dart';
+import 'package:mark4/single/run_test_single.dart';
 import 'package:window_manager/window_manager.dart';
 
 class Home extends StatefulWidget {
@@ -94,13 +95,13 @@ class _HomeState extends State<Home> {
                 Text(
                   getCurrentTime(),
                   style: const TextStyle(
-                    fontSize: 20,
+                    fontSize: 30,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
                 Text(
                   getCurrentDate(),
-                  style: const TextStyle(fontSize: 16, color: Colors.black54),
+                  style: const TextStyle(fontSize: 20, color: Colors.black54),
                 ),
               ],
             ),
@@ -109,7 +110,7 @@ class _HomeState extends State<Home> {
                 onTap: () {
                   _showPowerPopup(context);
                 },
-                child: Image.asset('images/powerButton.png', scale: 7),
+                child: Image.asset('images/powerButton.png', scale: 3),
               ),
               const SizedBox(width: 15),
             ],
@@ -129,7 +130,7 @@ class _HomeState extends State<Home> {
                       children: [
                         // RUN TEST (대형 버튼)
                         Container(
-                          height: 210,
+                          height: 310,
                           width: double.infinity,
                           decoration: BoxDecoration(
                             borderRadius: BorderRadius.circular(18),
@@ -151,10 +152,16 @@ class _HomeState extends State<Home> {
                             child: InkWell(
                               borderRadius: BorderRadius.circular(18),
                               onTap: () {
+                                // Navigator.push(
+                                //   context,
+                                //   MaterialPageRoute(
+                                //     builder: (context) => RunTest(),
+                                //   ),
+                                // );
                                 Navigator.push(
                                   context,
                                   MaterialPageRoute(
-                                    builder: (context) => RunTest(),
+                                    builder: (context) => RunTestSingle(),
                                   ),
                                 );
                               },
@@ -163,14 +170,14 @@ class _HomeState extends State<Home> {
                                 children: [
                                   Image.asset(
                                     'images/run_test_icon.png',
-                                    scale: 3,
+                                    scale: 2,
                                     color: Colors.white,
                                   ),
                                   SizedBox(height: 12),
                                   Text(
                                     "RUN TEST",
                                     style: TextStyle(
-                                      fontSize: 30,
+                                      fontSize: 40,
                                       fontWeight: FontWeight.bold,
                                       color: Colors.white,
                                     ),
@@ -188,7 +195,7 @@ class _HomeState extends State<Home> {
                             // TEST RESULT
                             Expanded(
                               child: Container(
-                                height: 100,
+                                height: 200,
                                 decoration: BoxDecoration(
                                   borderRadius: BorderRadius.circular(18),
                                   gradient: const LinearGradient(
@@ -212,7 +219,7 @@ class _HomeState extends State<Home> {
                                           context,
                                           MaterialPageRoute(
                                             builder:
-                                                (context) => RunTestListPage(),
+                                                (context) => RunTestSingle(),
                                           ),
                                         );
                                       } else {
@@ -227,7 +234,7 @@ class _HomeState extends State<Home> {
                                           context,
                                           MaterialPageRoute(
                                             builder:
-                                                (context) => RunTestListPage(),
+                                                (context) => RunTestSingle(),
                                           ),
                                         );
                                       }
@@ -238,14 +245,14 @@ class _HomeState extends State<Home> {
                                       children: [
                                         Image.asset(
                                           'images/test_result_icon.png',
-                                          scale: 5,
+                                          scale: 3,
                                           color: Colors.white,
                                         ),
                                         SizedBox(height: 6),
                                         Text(
                                           "TEST RESULT",
                                           style: TextStyle(
-                                            fontSize: 18,
+                                            fontSize: 26,
                                             fontWeight: FontWeight.bold,
                                             color: Colors.white,
                                           ),
@@ -262,7 +269,7 @@ class _HomeState extends State<Home> {
                             // SETTING
                             Expanded(
                               child: Container(
-                                height: 100,
+                                height: 200,
                                 decoration: BoxDecoration(
                                   borderRadius: BorderRadius.circular(18),
                                   gradient: const LinearGradient(
@@ -285,14 +292,14 @@ class _HomeState extends State<Home> {
                                       children: [
                                         Image.asset(
                                           'images/setting_icon.png',
-                                          scale: 6,
+                                          scale: 4,
                                           color: Colors.white,
                                         ),
                                         SizedBox(height: 6),
                                         Text(
                                           "SETTING",
                                           style: TextStyle(
-                                            fontSize: 18,
+                                            fontSize: 26,
                                             fontWeight: FontWeight.bold,
                                             color: Colors.white,
                                           ),
