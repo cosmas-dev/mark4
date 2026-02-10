@@ -32,27 +32,6 @@ class _RunTestSingleState extends State<RunTestSingle> {
   final List<String> itemOptions = ['Flu', 'COVID19', 'RSV'];
   final List<String> sampleTypeOptions = ['Blood', 'Saliva', 'Nasal'];
 
-  void _showKeyboard() {
-    if (Platform.isLinux) {
-      Process.run('dbus-send', [
-        '--type=method_call',
-        '--dest=org.onboard.Onboard',
-        '/org/onboard/Onboard/Keyboard',
-        'org.onboard.Onboard.Keyboard.Show',
-      ]);
-    }
-  }
-
-  @override
-  void initState() {
-    super.initState();
-    _focusNode.addListener(() {
-      if (_focusNode.hasFocus) {
-        _showKeyboard();
-      }
-    });
-  }
-
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
@@ -523,7 +502,6 @@ class _RunTestSingleState extends State<RunTestSingle> {
         borderRadius: BorderRadius.circular(8),
       ),
       child: TextField(
-        focusNode: _focusNode,
         controller: c,
         keyboardType: isNumber ? TextInputType.number : null,
         decoration: const InputDecoration(border: InputBorder.none),
