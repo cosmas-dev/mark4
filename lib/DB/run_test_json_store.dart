@@ -48,7 +48,10 @@ class RunTestJsonStore {
     });
 
     final file = await _file();
+    print('📁 저장 시도 경로: ${file.path}');
+
     await file.writeAsString(jsonEncode(list));
+    print('✅ 파일 저장 완료');
   }
 
   Future<void> deleteByIds(List<String> ids) async {
