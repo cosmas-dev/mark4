@@ -162,11 +162,11 @@ class _RunTestSingleState extends State<RunTestSingle> {
                     MaterialPageRoute(
                       builder:
                           (context) => PreparingPageSingle(
-                            userName: userNameController.text,
-                            age: ageController.text,
-                            gender: gender!,
-                            sampleType: sampleType!,
-                            selectedItem: selectedItem!,
+                            userName: "고스마",
+                            age: "11",
+                            gender: "Male",
+                            sampleType: "Test",
+                            selectedItem: "Test",
                           ),
                     ),
                   );

@@ -3,7 +3,6 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:mark4/DB/run_test_json_store.dart';
 import 'package:mark4/DB/run_test_row.dart';
-import 'package:mark4/class/run_test_data.dart';
 import 'package:mark4/components/current_time.dart';
 
 class RunTestListPage extends StatefulWidget {
@@ -446,7 +445,7 @@ class _RunTestListPageState extends State<RunTestListPage> {
       builder: (context) {
         return Center(
           child: Container(
-            width: 300,
+            width: 600,
             padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
             decoration: BoxDecoration(
               color: Colors.white,
@@ -459,7 +458,7 @@ class _RunTestListPageState extends State<RunTestListPage> {
                   'Save all data to the\nconnected USB?',
                   textAlign: TextAlign.center,
                   style: TextStyle(
-                    fontSize: 18,
+                    fontSize: 50,
                     fontWeight: FontWeight.bold,
                     color: Color(0xFF1A2A4A),
                   ),
@@ -476,7 +475,7 @@ class _RunTestListPageState extends State<RunTestListPage> {
                           await exportAllToUsb(); // ✅ 전체 CSV 저장
                         },
                         child: Container(
-                          height: 48,
+                          height: 70,
                           decoration: BoxDecoration(
                             borderRadius: BorderRadius.circular(14),
                             gradient: const LinearGradient(
@@ -490,7 +489,7 @@ class _RunTestListPageState extends State<RunTestListPage> {
                               'YES',
                               style: TextStyle(
                                 color: Colors.white,
-                                fontSize: 18,
+                                fontSize: 35,
                                 fontWeight: FontWeight.bold,
                               ),
                             ),
@@ -506,7 +505,7 @@ class _RunTestListPageState extends State<RunTestListPage> {
                       child: GestureDetector(
                         onTap: () => Navigator.pop(context),
                         child: Container(
-                          height: 48,
+                          height: 70,
                           decoration: BoxDecoration(
                             borderRadius: BorderRadius.circular(14),
                             gradient: const LinearGradient(
@@ -520,7 +519,7 @@ class _RunTestListPageState extends State<RunTestListPage> {
                               'NO',
                               style: TextStyle(
                                 color: Colors.white,
-                                fontSize: 18,
+                                fontSize: 35,
                                 fontWeight: FontWeight.bold,
                               ),
                             ),

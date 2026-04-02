@@ -104,7 +104,7 @@ class _PreparingPageSingleState extends State<PreparingPageSingle> {
                   ),
                   child: // ---------- 슬라이드 카드 영역 ----------
                       SizedBox(
-                    height: 800,
+                    height: 1000,
                     child: Column(
                       children: [
                         // -------- PageView --------

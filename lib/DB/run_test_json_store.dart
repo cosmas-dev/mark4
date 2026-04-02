@@ -1,7 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
 
-import 'package:mark4/class/run_test_data.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:uuid/uuid.dart';
 
@@ -48,10 +47,7 @@ class RunTestJsonStore {
     });
 
     final file = await _file();
-    print('📁 저장 시도 경로: ${file.path}');
-
     await file.writeAsString(jsonEncode(list));
-    print('✅ 파일 저장 완료');
   }
 
   Future<void> deleteByIds(List<String> ids) async {
