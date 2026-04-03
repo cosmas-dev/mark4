@@ -8,10 +8,11 @@ import 'package:mark4/single/result_single.dart';
 import 'package:path_provider/path_provider.dart';
 
 class ProgressPageSingle extends StatefulWidget {
-  final String userName, age, gender, sampleType, selectedItem;
+  final String userName, age, gender, sampleType, selectedItem, shutterSpeed;
   const ProgressPageSingle({
     super.key,
     required this.userName,
+    required this.shutterSpeed,
     required this.gender,
     required this.sampleType,
     required this.selectedItem,
@@ -32,6 +33,8 @@ class _ProgressPageSingleState extends State<ProgressPageSingle>
   int lightNumber = 1;
   Socket? socket;
   List<int> _buffer = [];
+
+  int currentShutterValue = 100000; // 추가
 
   @override
   void initState() {
@@ -243,6 +246,7 @@ class _ProgressPageSingleState extends State<ProgressPageSingle>
         MaterialPageRoute(
           builder:
               (context) => ResultSingle(
+                shutterSpeed: widget.shutterSpeed,
                 userName: widget.userName,
                 gender: widget.gender,
                 sampleType: widget.sampleType,

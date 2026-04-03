@@ -97,7 +97,10 @@ class RunTestJsonStore {
     return List<Map<String, dynamic>>.from(jsonDecode(content));
   }
 
-  Future<String> _saveImagePermanently(String sourcePath) async {
+  Future<String> _saveImagePermanently(
+    String sourcePath,
+    String shutterSpeed,
+  ) async {
     final sourceFile = File(sourcePath);
 
     if (!await sourceFile.exists()) {
@@ -109,14 +112,14 @@ class RunTestJsonStore {
     final ext =
         p.extension(sourcePath).isNotEmpty ? p.extension(sourcePath) : '.jpg';
 
-    final fileName =
-        '${DateTime.now().millisecondsSinceEpoch}_${const Uuid().v4()}$ext';
+    final fileName = '${shutterSpeed}_${DateTime.now()}$ext';
 
     final savedFile = await sourceFile.copy('${imageDir.path}/$fileName');
     return savedFile.path;
   }
 
   Future<void> save({
+    required String shutterSpeed,
     required String name,
     required String age,
     required String gender,
@@ -128,7 +131,7 @@ class RunTestJsonStore {
     final list = await readAll();
 
     // 원본 경로가 임시 경로일 수 있으니 앱 내부로 복사
-    final savedImagePath = await _saveImagePermanently(imagePath);
+    final savedImagePath = await _saveImagePermanently(imagePath, shutterSpeed);
 
     list.add({
       'id': const Uuid().v4(),

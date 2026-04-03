@@ -122,10 +122,17 @@ import 'package:flutter/material.dart';
 import 'package:mark4/DB/run_test_json_store.dart';
 
 class ResultSingle extends StatefulWidget {
-  final String userName, age, gender, sampleType, selectedItem, imagePath;
+  final String userName,
+      age,
+      gender,
+      sampleType,
+      selectedItem,
+      imagePath,
+      shutterSpeed;
 
   const ResultSingle({
     super.key,
+    required this.shutterSpeed,
     required this.userName,
     required this.gender,
     required this.sampleType,
@@ -154,6 +161,7 @@ class _ResultSingleState extends State<ResultSingle> {
 
     try {
       await store.save(
+        shutterSpeed: widget.shutterSpeed, // 추가
         name: widget.userName,
         age: widget.age,
         gender: widget.gender,
