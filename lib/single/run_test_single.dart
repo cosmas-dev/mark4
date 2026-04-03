@@ -8,7 +8,8 @@ import 'package:mark4/components/current_time.dart';
 import 'package:mark4/single/preparing_single.dart';
 
 class RunTestSingle extends StatefulWidget {
-  const RunTestSingle({super.key});
+  final String shutterSpeed;
+  const RunTestSingle({super.key, required this.shutterSpeed});
 
   @override
   State<RunTestSingle> createState() => _RunTestSingleState();
@@ -162,6 +163,7 @@ class _RunTestSingleState extends State<RunTestSingle> {
                     MaterialPageRoute(
                       builder:
                           (context) => PreparingPageSingle(
+                            shutterSpeed: widget.shutterSpeed,
                             userName: "고스마",
                             age: "11",
                             gender: "Male",

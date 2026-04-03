@@ -404,7 +404,10 @@ class _HomeState extends State<Home> {
                                 Navigator.push(
                                   context,
                                   MaterialPageRoute(
-                                    builder: (context) => RunTestSingle(),
+                                    builder:
+                                        (context) => RunTestSingle(
+                                          shutterSpeed: shutterValue.toString(),
+                                        ),
                                   ),
                                 );
                               },
