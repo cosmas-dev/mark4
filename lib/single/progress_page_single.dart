@@ -154,7 +154,7 @@ class _ProgressPageSingleState extends State<ProgressPageSingle>
         },
       );
 
-      const shutterValue = "225000";
+      const shutterValue = "100000";
 
       // 1. 셔터 속도 설정
       var requestData = jsonEncode({
