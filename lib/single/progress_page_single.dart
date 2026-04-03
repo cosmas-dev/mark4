@@ -35,6 +35,8 @@ class _ProgressPageSingleState extends State<ProgressPageSingle>
   List<int> _buffer = [];
 
   int currentShutterValue = 100000; // 추가
+  bool _isSavingImage = false;
+  bool _hasNavigated = false;
 
   @override
   void initState() {
@@ -60,6 +62,7 @@ class _ProgressPageSingleState extends State<ProgressPageSingle>
 
   @override
   void dispose() {
+    socket?.destroy();
     controller.dispose();
     super.dispose();
   }
@@ -182,6 +185,7 @@ class _ProgressPageSingleState extends State<ProgressPageSingle>
   }
 
   void processBuffer() {
+    if (_isSavingImage || _hasNavigated) return;
     const int headerSize = 8;
 
     while (true) {
@@ -204,6 +208,7 @@ class _ProgressPageSingleState extends State<ProgressPageSingle>
         utf8.decode(frameData);
         continue;
       } catch (_) {
+        _isSavingImage = true;
         // ✅ 이미지 데이터 도착
         saveImage(frameData);
         break;
@@ -212,6 +217,7 @@ class _ProgressPageSingleState extends State<ProgressPageSingle>
   }
 
   Future<void> saveImage(List<int> data) async {
+    if (_hasNavigated) return;
     try {
       final directory = await getApplicationDocumentsDirectory();
       // ⭐ 촬영 시점 파일명 생성
@@ -232,6 +238,9 @@ class _ProgressPageSingleState extends State<ProgressPageSingle>
       print("📁 이미지 영구 저장 완료: $filePath");
 
       await Future.delayed(const Duration(milliseconds: 500));
+
+      if (!mounted || _hasNavigated) return;
+      _hasNavigated = true;
       // var requestData = jsonEncode({
       //   "header": "B001",
       //   "body": {"CMD": "BL_CTRL", "DATA": "0"},
@@ -257,6 +266,7 @@ class _ProgressPageSingleState extends State<ProgressPageSingle>
         ),
       );
     } catch (e) {
+      _isSavingImage = false;
       print("이미지 저장 실패: $e");
     }
   }
