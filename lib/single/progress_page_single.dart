@@ -119,6 +119,23 @@ class _ProgressPageSingleState extends State<ProgressPageSingle>
     );
   }
 
+  Future<void> _sendCommand({
+    required String header,
+    required String cmd,
+    required String data,
+  }) async {
+    if (socket == null) return;
+
+    final requestData = jsonEncode({
+      "header": header,
+      "body": {"CMD": cmd, "DATA": data},
+    });
+
+    print("📤 SEND -> $requestData");
+    socket!.writeln(requestData);
+    await socket!.flush();
+  }
+
   Future<void> captureImageFromIoT() async {
     try {
       socket = await Socket.connect(iotDeviceIp, 9191);
@@ -130,24 +147,38 @@ class _ProgressPageSingleState extends State<ProgressPageSingle>
           processBuffer();
         },
         onError: (error) {
-          print("Socket error: $error");
+          print("❌ Socket error: $error");
         },
         onDone: () {
-          print("Socket closed");
+          print("🔌 Socket closed");
         },
       );
 
-      // SHUTTER 요청 전송 (셔터 속도 설정)
+      const shutterValue = "225000";
+
+      // 1. 셔터 속도 설정
       var requestData = jsonEncode({
         "header": "C001",
-        "body": {"CMD": "SHUTTER", "DATA": "900000"},
+        "body": {"CMD": "SHUTTER", "DATA": shutterValue},
       });
+      print("📷 Flutter에서 설정한 SHUTTER 값: $shutterValue");
       socket!.writeln(requestData);
       await socket!.flush();
 
-      await Future.delayed(const Duration(milliseconds: 100));
+      await Future.delayed(const Duration(milliseconds: 150));
 
-      // CAM_CTRL 요청 전송 (촬영 시작)
+      // 2. 현재 셔터 설정값 조회
+      requestData = jsonEncode({
+        "header": "A001",
+        "body": {"CMD": "CFG_INFO", "DATA": "6"},
+      });
+      print("📡 SHUTTER 현재값 조회 요청 전송");
+      socket!.writeln(requestData);
+      await socket!.flush();
+
+      await Future.delayed(const Duration(milliseconds: 150));
+
+      // 3. LED 설정
       requestData = jsonEncode({
         "header": "F001",
         "body": {"CMD": "AD_LED_CTRL", "DATA": "80,100"},
@@ -157,6 +188,7 @@ class _ProgressPageSingleState extends State<ProgressPageSingle>
 
       await Future.delayed(const Duration(milliseconds: 100));
 
+      // 4. 촬영 시작
       requestData = jsonEncode({
         "header": "B001",
         "body": {"CMD": "CAM_CTRL", "DATA": "1"},
@@ -166,6 +198,8 @@ class _ProgressPageSingleState extends State<ProgressPageSingle>
       print("📡 CAM_CTRL 요청 전송");
 
       await Future.delayed(const Duration(seconds: 1));
+
+      // 5. 이미지 전송 요청
       requestData = jsonEncode({
         "header": "B001",
         "body": {"CMD": "IMG_TRANS", "DATA": "1"},
@@ -187,6 +221,7 @@ class _ProgressPageSingleState extends State<ProgressPageSingle>
       Uint8List headerBytes = Uint8List.fromList(
         _buffer.sublist(0, headerSize),
       );
+
       int frameSize = ByteData.sublistView(
         headerBytes,
       ).getUint64(0, Endian.little);
@@ -196,15 +231,44 @@ class _ProgressPageSingleState extends State<ProgressPageSingle>
       List<int> frameData = _buffer.sublist(headerSize, headerSize + frameSize);
       _buffer = _buffer.sublist(headerSize + frameSize);
 
-      // ✅ JSON이면 패스
+      // 먼저 텍스트/JSON인지 확인
       try {
-        utf8.decode(frameData);
+        final text = utf8.decode(frameData).trim();
+        print("📩 수신 텍스트: $text");
+
+        final decoded = jsonDecode(text);
+        _handleDeviceResponse(decoded);
+
         continue;
       } catch (_) {
-        // ✅ 이미지 데이터 도착
+        // JSON 아니면 이미지로 처리
+        print("🖼️ 이미지 데이터 수신");
         saveImage(frameData);
         break;
       }
+    }
+  }
+
+  void _handleDeviceResponse(dynamic decoded) {
+    try {
+      final header = decoded["header"];
+      final body = decoded["body"];
+      final cmd = body["CMD"];
+      final data = body["DATA"];
+
+      print("📦 header=$header, cmd=$cmd, data=$data");
+
+      // 셔터 설정 응답
+      if (header == "C001" && cmd == "SHUTTER") {
+        print("📷 장비 응답 SHUTTER 값: $data");
+      }
+
+      // 현재 설정값 조회 응답
+      if (header == "A001" && cmd == "CFG_INFO") {
+        print("📷 현재 조회된 SHUTTER 설정값: $data");
+      }
+    } catch (e) {
+      print("❌ 응답 파싱 실패: $e");
     }
   }
 
