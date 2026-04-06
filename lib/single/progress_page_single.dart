@@ -185,34 +185,65 @@ class _ProgressPageSingleState extends State<ProgressPageSingle>
     }
   }
 
+  bool _isJpeg(List<int> bytes) {
+    return bytes.length >= 4 &&
+        bytes[0] == 0xFF &&
+        bytes[1] == 0xD8 &&
+        bytes[bytes.length - 2] == 0xFF &&
+        bytes[bytes.length - 1] == 0xD9;
+  }
+
+  bool _isPng(List<int> bytes) {
+    return bytes.length >= 8 &&
+        bytes[0] == 0x89 &&
+        bytes[1] == 0x50 &&
+        bytes[2] == 0x4E &&
+        bytes[3] == 0x47;
+  }
+
   void processBuffer() {
     if (_isSavingImage || _hasNavigated) return;
+
     const int headerSize = 8;
 
     while (true) {
       if (_buffer.length < headerSize) break;
 
-      Uint8List headerBytes = Uint8List.fromList(
-        _buffer.sublist(0, headerSize),
-      );
-      int frameSize = ByteData.sublistView(
+      final headerBytes = Uint8List.fromList(_buffer.sublist(0, headerSize));
+      final frameSize = ByteData.sublistView(
         headerBytes,
       ).getUint64(0, Endian.little);
 
-      if (_buffer.length < headerSize + frameSize) break;
+      if (frameSize <= 0) {
+        debugPrint('잘못된 frameSize: $frameSize');
+        _buffer.clear();
+        break;
+      }
 
-      List<int> frameData = _buffer.sublist(headerSize, headerSize + frameSize);
+      if (_buffer.length < headerSize + frameSize) {
+        break;
+      }
+
+      final frameData = _buffer.sublist(headerSize, headerSize + frameSize);
       _buffer = _buffer.sublist(headerSize + frameSize);
 
-      // ✅ JSON이면 패스
-      try {
-        utf8.decode(frameData);
-        continue;
-      } catch (_) {
+      debugPrint('frame 수신: size=${frameData.length}');
+      debugPrint('앞 8바이트=${frameData.take(8).toList()}');
+      debugPrint(
+        '뒤 8바이트=${frameData.skip(frameData.length > 8 ? frameData.length - 8 : 0).toList()}',
+      );
+
+      if (_isJpeg(frameData) || _isPng(frameData)) {
         _isSavingImage = true;
-        // ✅ 이미지 데이터 도착
         saveImage(frameData);
         break;
+      }
+
+      try {
+        final text = utf8.decode(frameData);
+        debugPrint('텍스트 프레임: $text');
+      } catch (_) {
+        debugPrint('알 수 없는 바이너리 프레임, 저장 안 함');
       }
     }
   }
