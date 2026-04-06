@@ -161,7 +161,7 @@ class _ProgressPageSingleState extends State<ProgressPageSingle>
       socket!.writeln(requestData);
       await socket!.flush();
 
-      await Future.delayed(const Duration(milliseconds: 100));
+      await Future.delayed(const Duration(milliseconds: 500));
 
       requestData = jsonEncode({
         "header": "B001",
@@ -179,6 +179,7 @@ class _ProgressPageSingleState extends State<ProgressPageSingle>
       socket!.writeln(requestData);
       await socket!.flush();
       print("📡 IMG_TRANS 요청 전송");
+      await Future.delayed(const Duration(milliseconds: 500));
     } catch (e) {
       print("❌ IoT 기기 연결 실패: $e");
     }
