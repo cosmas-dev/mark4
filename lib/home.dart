@@ -26,10 +26,10 @@ class _HomeState extends State<Home> {
 
   Socket? socket;
   final String iotDeviceIp = "192.168.0.72";
-  int shutterValue = 150000;
+  int shutterValue = 900000;
   static const int shutterStep = 10000;
   static const int shutterMin = 10000;
-  static const int shutterMax = 10000000;
+  static const int shutterMax = 1000000;
 
   List<int> _buffer = [];
   bool isLoadingShutter = false;
@@ -759,7 +759,7 @@ class _HomeState extends State<Home> {
                     elevation: 0,
                   ),
                   child: const Text(
-                    "-100000",
+                    "-10000",
                     style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                   ),
                 ),
@@ -778,7 +778,7 @@ class _HomeState extends State<Home> {
                     elevation: 0,
                   ),
                   child: const Text(
-                    "+100000",
+                    "+10000",
                     style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                   ),
                 ),
