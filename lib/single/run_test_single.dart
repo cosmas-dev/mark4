@@ -22,7 +22,7 @@ class _RunTestSingleState extends State<RunTestSingle> {
   bool showPopup = false;
 
   Socket? socket;
-  final String iotDeviceIp = "192.168.0.72";
+  final String iotDeviceIp = "192.168.0.39";
 
   final TextEditingController userNameController = TextEditingController();
   final TextEditingController ageController = TextEditingController();

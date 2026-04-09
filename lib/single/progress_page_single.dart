@@ -29,7 +29,7 @@ class _ProgressPageSingleState extends State<ProgressPageSingle>
   late Animation<double> progress;
 
   String? imagePath;
-  final String iotDeviceIp = "192.168.0.72";
+  final String iotDeviceIp = "192.168.0.39";
   int lightNumber = 1;
   Socket? socket;
   List<int> _buffer = [];
