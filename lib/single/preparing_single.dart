@@ -283,6 +283,7 @@ class _PreparingPageSingleState extends State<PreparingPageSingle> {
                           sampleType: widget.sampleType,
                           selectedItem: widget.selectedItem,
                           age: widget.age,
+                          ip: widget.ip,
                         ),
                   ),
                 );

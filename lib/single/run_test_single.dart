@@ -26,7 +26,7 @@ class _RunTestSingleState extends State<RunTestSingle> {
   bool showPopup = false;
 
   Socket? socket;
-  final String iotDeviceIp = "192.168.0.39";
+  // final String iotDeviceIp = "192.168.0.39";
 
   final TextEditingController userNameController = TextEditingController();
   final TextEditingController ageController = TextEditingController();
@@ -211,7 +211,7 @@ class _RunTestSingleState extends State<RunTestSingle> {
   Future<void> editIoTSettings() async {
     try {
       // IoT 기기와 소켓 연결 (포트 9191)
-      socket = await Socket.connect(iotDeviceIp, 9191);
+      socket = await Socket.connect(widget.ip, 9191);
       print("✅ IoT 기기와 연결 성공 (사진 촬영 요청)");
 
       // CAM_CTRL 요청 전송 (촬영 시작)

@@ -8,7 +8,13 @@ import 'package:mark4/single/result_single.dart';
 import 'package:path_provider/path_provider.dart';
 
 class ProgressPageSingle extends StatefulWidget {
-  final String userName, age, gender, sampleType, selectedItem, shutterSpeed;
+  final String userName,
+      age,
+      gender,
+      sampleType,
+      selectedItem,
+      shutterSpeed,
+      ip;
   const ProgressPageSingle({
     super.key,
     required this.userName,
@@ -17,6 +23,7 @@ class ProgressPageSingle extends StatefulWidget {
     required this.sampleType,
     required this.selectedItem,
     required this.age,
+    required this.ip,
   });
 
   @override
@@ -29,7 +36,7 @@ class _ProgressPageSingleState extends State<ProgressPageSingle>
   late Animation<double> progress;
 
   String? imagePath;
-  final String iotDeviceIp = "192.168.0.39";
+  // final String iotDeviceIp = "192.168.0.39";
   int lightNumber = 1;
   Socket? socket;
   List<int> _buffer = [];
@@ -127,7 +134,7 @@ class _ProgressPageSingleState extends State<ProgressPageSingle>
 
   Future<void> captureImageFromIoT() async {
     try {
-      socket = await Socket.connect(iotDeviceIp, 9191);
+      socket = await Socket.connect(widget.ip, 9191);
       print("✅ IoT 기기와 연결 성공");
 
       socket!.listen(
@@ -294,6 +301,7 @@ class _ProgressPageSingleState extends State<ProgressPageSingle>
                 selectedItem: widget.selectedItem,
                 age: widget.age,
                 imagePath: filePath,
+                ip: widget.ip,
               ),
         ),
       );

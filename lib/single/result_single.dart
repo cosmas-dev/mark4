@@ -128,11 +128,13 @@ class ResultSingle extends StatefulWidget {
       sampleType,
       selectedItem,
       imagePath,
-      shutterSpeed;
+      shutterSpeed,
+      ip;
 
   const ResultSingle({
     super.key,
     required this.shutterSpeed,
+    required this.ip,
     required this.userName,
     required this.gender,
     required this.sampleType,
