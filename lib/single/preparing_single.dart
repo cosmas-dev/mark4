@@ -6,7 +6,13 @@ import 'package:mark4/home.dart';
 import 'package:mark4/single/progress_page_single.dart';
 
 class PreparingPageSingle extends StatefulWidget {
-  final String userName, age, gender, sampleType, selectedItem, shutterSpeed;
+  final String userName,
+      age,
+      gender,
+      sampleType,
+      selectedItem,
+      shutterSpeed,
+      ip;
   const PreparingPageSingle({
     super.key,
     required this.shutterSpeed,
@@ -15,6 +21,7 @@ class PreparingPageSingle extends StatefulWidget {
     required this.gender,
     required this.sampleType,
     required this.selectedItem,
+    required this.ip,
   });
 
   @override
@@ -69,7 +76,7 @@ class _PreparingPageSingleState extends State<PreparingPageSingle> {
             onTap: () {
               Navigator.pushAndRemoveUntil(
                 context,
-                MaterialPageRoute(builder: (context) => Home()),
+                MaterialPageRoute(builder: (context) => Home(ip: widget.ip)),
                 (route) => false,
               );
             },

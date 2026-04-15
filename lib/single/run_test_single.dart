@@ -8,8 +8,12 @@ import 'package:mark4/components/current_time.dart';
 import 'package:mark4/single/preparing_single.dart';
 
 class RunTestSingle extends StatefulWidget {
-  final String shutterSpeed;
-  const RunTestSingle({super.key, required this.shutterSpeed});
+  final String shutterSpeed, ip;
+  const RunTestSingle({
+    super.key,
+    required this.shutterSpeed,
+    required this.ip,
+  });
 
   @override
   State<RunTestSingle> createState() => _RunTestSingleState();
@@ -169,6 +173,7 @@ class _RunTestSingleState extends State<RunTestSingle> {
                             gender: "Male",
                             sampleType: "Test",
                             selectedItem: "Test",
+                            ip: widget.ip,
                           ),
                     ),
                   );

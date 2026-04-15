@@ -10,7 +10,8 @@ import 'package:mark4/single/run_test_single.dart';
 import 'package:window_manager/window_manager.dart';
 
 class Home extends StatefulWidget {
-  const Home({super.key});
+  final String ip;
+  const Home({super.key, required this.ip});
 
   @override
   State<Home> createState() => _HomeState();
@@ -25,7 +26,7 @@ class _HomeState extends State<Home> {
   static const Duration _tapTimeout = Duration(seconds: 2);
 
   Socket? socket;
-  final String iotDeviceIp = "192.168.0.39";
+  // final String iotDeviceIp = widget.ip;
   int shutterValue = 900000;
   static const int shutterStep = 10000;
   static const int shutterMin = 10000;
@@ -68,7 +69,7 @@ class _HomeState extends State<Home> {
 
   Future<void> _ensureSocketConnected() async {
     if (socket != null) return;
-    socket = await Socket.connect(iotDeviceIp, 9191);
+    socket = await Socket.connect(widget.ip, 9191);
 
     socket!.listen(
       (data) {
@@ -407,6 +408,7 @@ class _HomeState extends State<Home> {
                                     builder:
                                         (context) => RunTestSingle(
                                           shutterSpeed: shutterValue.toString(),
+                                          ip: widget.ip,
                                         ),
                                   ),
                                 );
@@ -665,7 +667,7 @@ class _HomeState extends State<Home> {
   Future<void> powerOff() async {
     try {
       // IoT 기기와 소켓 연결 (포트 9191)
-      socket = await Socket.connect(iotDeviceIp, 9191);
+      socket = await Socket.connect(widget.ip, 9191);
       print("✅ IoT 기기와 연결 성공 (사진 촬영 요청)");
 
       // CAM_CTRL 요청 전송 (촬영 시작)

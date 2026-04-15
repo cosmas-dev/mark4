@@ -2,12 +2,15 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:intl/date_symbol_data_local.dart';
+import 'package:mark4/get_ip_address.dart';
 import 'package:mark4/home.dart';
 import 'package:window_manager/window_manager.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await initializeDateFormatting('ko_KR', null); // 로케일 초기화
+  final ip = await getLocalIpv4();
+  print('Local IP: $ip');
 
   if (!Platform.isAndroid && !Platform.isIOS) {
     // 데스크탑 플랫폼에서만 윈도우 매니저 초기화
@@ -22,11 +25,12 @@ void main() async {
     });
   }
 
-  runApp(const MyApp());
+  runApp(MyApp(ip: ip ?? "192.168.0.72"));
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+  final String ip;
+  const MyApp({super.key, required this.ip});
 
   // This widget is the root of your application.
   @override
@@ -52,7 +56,7 @@ class MyApp extends StatelessWidget {
         // tested with just a hot reload.
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
       ),
-      home: const Home(),
+      home: Home(ip: ip),
     );
   }
 }

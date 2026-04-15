@@ -8,7 +8,7 @@ void main() {
     await initializeDateFormatting('ko_KR', null);
   });
   testWidgets("Test Flow", (tester) async {
-    await tester.pumpWidget(const MyApp());
+    await tester.pumpWidget(const MyApp(ip: "192.168.0.72"));
     await tester.pumpAndSettle();
 
     // ========== 1. RUN TEST 화면 이동 ==========
