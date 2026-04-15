@@ -27,7 +27,7 @@ class _HomeState extends State<Home> {
 
   Socket? socket;
   // final String iotDeviceIp = widget.ip;
-  int shutterValue = 900000;
+  int shutterValue = 100000;
   static const int shutterStep = 10000;
   static const int shutterMin = 10000;
   static const int shutterMax = 1000000;
