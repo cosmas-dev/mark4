@@ -370,10 +370,10 @@ class _HomeState extends State<Home> {
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Text(
-                          "IP: ${widget.ip}",
-                          style: TextStyle(fontSize: 16, color: Colors.black54),
-                        ),
+                        // Text(
+                        //   "IP: ${widget.ip}",
+                        //   style: TextStyle(fontSize: 16, color: Colors.black54),
+                        // ),
                         _buildShutterControlCard(),
                         const SizedBox(height: 24),
                         // RUN TEST (대형 버튼)

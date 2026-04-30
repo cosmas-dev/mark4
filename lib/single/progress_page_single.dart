@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
@@ -15,6 +16,7 @@ class ProgressPageSingle extends StatefulWidget {
       selectedItem,
       shutterSpeed,
       ip;
+
   const ProgressPageSingle({
     super.key,
     required this.userName,
@@ -35,15 +37,14 @@ class _ProgressPageSingleState extends State<ProgressPageSingle>
   late AnimationController controller;
   late Animation<double> progress;
 
-  String? imagePath;
-  // final String iotDeviceIp = "192.168.0.39";
-  int lightNumber = 1;
   Socket? socket;
-  List<int> _buffer = [];
+  final List<int> _buffer = [];
 
-  int currentShutterValue = 100000; // 추가
+  String? _imagePath;
+  Map<String, dynamic>? _analysisResult;
   bool _isSavingImage = false;
   bool _hasNavigated = false;
+  Timer? _fallbackTimer;
 
   @override
   void initState() {
@@ -51,17 +52,15 @@ class _ProgressPageSingleState extends State<ProgressPageSingle>
 
     controller = AnimationController(
       vsync: this,
-      duration: const Duration(seconds: 7), // 0~100%까지 걸리는 시간
+      duration: const Duration(seconds: 7),
     );
 
-    progress = Tween<double>(
-      begin: 0.0,
-      end: 1.0,
-    ).animate(CurvedAnimation(parent: controller, curve: Curves.easeInOut));
+    progress = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(parent: controller, curve: Curves.easeInOut),
+    );
 
-    controller.forward(); // 자동 시작
+    controller.forward();
 
-    // 사진 촬영 및 수신 시작
     WidgetsBinding.instance.addPostFrameCallback((_) {
       captureImageFromIoT();
     });
@@ -69,6 +68,7 @@ class _ProgressPageSingleState extends State<ProgressPageSingle>
 
   @override
   void dispose() {
+    _fallbackTimer?.cancel();
     socket?.destroy();
     controller.dispose();
     super.dispose();
@@ -83,10 +83,6 @@ class _ProgressPageSingleState extends State<ProgressPageSingle>
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            // _topBar(),
-            // const SizedBox(height: 40),
-
-            // ---------- Animated Progress ----------
             Center(
               child: AnimatedBuilder(
                 animation: controller,
@@ -111,7 +107,6 @@ class _ProgressPageSingleState extends State<ProgressPageSingle>
                 },
               ),
             ),
-
             const SizedBox(height: 35),
             const Text(
               "Reading..",
@@ -132,63 +127,49 @@ class _ProgressPageSingleState extends State<ProgressPageSingle>
     );
   }
 
+  Future<void> _sendCommand({
+    required String header,
+    required String cmd,
+    required Object data,
+  }) async {
+    final currentSocket = socket;
+    if (currentSocket == null) return;
+
+    final requestData = jsonEncode({
+      "header": header,
+      "body": {"CMD": cmd, "DATA": data},
+    });
+
+    debugPrint("SEND -> $requestData");
+    currentSocket.write('$requestData\n');
+    await currentSocket.flush();
+  }
+
   Future<void> captureImageFromIoT() async {
     try {
       socket = await Socket.connect(widget.ip, 9191);
-      print("✅ IoT 기기와 연결 성공");
+      debugPrint("IoT 기기와 연결 성공: ${widget.ip}:9191");
 
       socket!.listen(
         (Uint8List data) {
           _buffer.addAll(data);
           processBuffer();
         },
-        onError: (error) {
-          print("Socket error: $error");
-        },
-        onDone: () {
-          print("Socket closed");
-        },
+        onError: (error) => debugPrint("Socket error: $error"),
+        onDone: () => debugPrint("Socket closed"),
       );
 
-      // // SHUTTER 요청 전송 (셔터 속도 설정)
-      // var requestData = jsonEncode({
-      //   "header": "C001",
-      //   "body": {"CMD": "SHUTTER", "DATA": "900000"},
-      // });
-      // socket!.writeln(requestData);
-      // await socket!.flush();
+      final shutter = int.tryParse(widget.shutterSpeed.trim());
+      if (shutter != null && shutter > 0) {
+        await _sendCommand(header: "C001", cmd: "SHUTTER", data: shutter);
+        await Future.delayed(const Duration(milliseconds: 120));
+      }
 
-      // await Future.delayed(const Duration(milliseconds: 100));
-
-      // CAM_CTRL 요청 전송 (촬영 시작)
-      var requestData = jsonEncode({
-        "header": "F001",
-        "body": {"CMD": "AD_LED_CTRL", "DATA": "80,100"},
-      });
-      socket!.writeln(requestData);
-      await socket!.flush();
-
-      await Future.delayed(const Duration(milliseconds: 500));
-
-      requestData = jsonEncode({
-        "header": "B001",
-        "body": {"CMD": "CAM_CTRL", "DATA": "1"},
-      });
-      socket!.writeln(requestData);
-      await socket!.flush();
-      print("📡 CAM_CTRL 요청 전송");
-
-      await Future.delayed(const Duration(seconds: 1));
-      requestData = jsonEncode({
-        "header": "B001",
-        "body": {"CMD": "IMG_TRANS", "DATA": "1"},
-      });
-      socket!.writeln(requestData);
-      await socket!.flush();
-      print("📡 IMG_TRANS 요청 전송");
-      await Future.delayed(const Duration(milliseconds: 500));
+      // MARK-4 v1.3 기준 자동 시퀀스: BL ON → RAW10+JPEG 캡처 → BL OFF
+      // → JPEG 전송 → Capture Complete JSON → ANALYSIS_DONE 비동기 통지.
+      await _sendCommand(header: "A001", cmd: "RUN", data: 1);
     } catch (e) {
-      print("❌ IoT 기기 연결 실패: $e");
+      debugPrint("IoT 기기 연결 실패: $e");
     }
   }
 
@@ -208,111 +189,163 @@ class _ProgressPageSingleState extends State<ProgressPageSingle>
         bytes[3] == 0x47;
   }
 
+  int _readUint32LE(int offset) {
+    final bytes = Uint8List.fromList(_buffer.sublist(offset, offset + 4));
+    return ByteData.sublistView(bytes).getUint32(0, Endian.little);
+  }
+
   void processBuffer() {
-    if (_isSavingImage || _hasNavigated) return;
+    while (_buffer.length >= 4 && !_hasNavigated) {
+      final firstLength = _readUint32LE(0);
 
-    const int headerSize = 8;
-
-    while (true) {
-      if (_buffer.length < headerSize) break;
-
-      final headerBytes = Uint8List.fromList(_buffer.sublist(0, headerSize));
-      final frameSize = ByteData.sublistView(
-        headerBytes,
-      ).getUint64(0, Endian.little);
-
-      if (frameSize <= 0) {
-        debugPrint('잘못된 frameSize: $frameSize');
+      if (firstLength <= 0) {
+        debugPrint('잘못된 length prefix: $firstLength');
         _buffer.clear();
-        break;
+        return;
       }
 
-      if (_buffer.length < headerSize + frameSize) {
-        break;
+      // 이미지 응답은 2-Block: [4B + image_size(4B)] + [4B + Binary]
+      if (firstLength == 4) {
+        if (_buffer.length < 12) return;
+
+        final imageSize = _readUint32LE(4);
+        final dataLength = _readUint32LE(8);
+        if (imageSize <= 0 || dataLength <= 0) {
+          _buffer.removeRange(0, 4);
+          continue;
+        }
+
+        if (_buffer.length < 12 + dataLength) return;
+
+        final imageData = _buffer.sublist(12, 12 + dataLength);
+        _buffer.removeRange(0, 12 + dataLength);
+
+        if (_isJpeg(imageData) || _isPng(imageData)) {
+          _isSavingImage = true;
+          saveImage(imageData);
+        } else {
+          debugPrint('이미지 프레임 형식 확인 실패: ${imageData.take(8).toList()}');
+        }
+        continue;
       }
 
-      final frameData = _buffer.sublist(headerSize, headerSize + frameSize);
-      _buffer = _buffer.sublist(headerSize + frameSize);
+      // JSON 응답 / 비동기 통지: [4B length] + JSON payload
+      if (_buffer.length < 4 + firstLength) return;
 
-      debugPrint('frame 수신: size=${frameData.length}');
-      debugPrint('앞 8바이트=${frameData.take(8).toList()}');
-      debugPrint(
-        '뒤 8바이트=${frameData.skip(frameData.length > 8 ? frameData.length - 8 : 0).toList()}',
-      );
-
-      if (_isJpeg(frameData) || _isPng(frameData)) {
-        _isSavingImage = true;
-        saveImage(frameData);
-        break;
-      }
+      final payload = _buffer.sublist(4, 4 + firstLength);
+      _buffer.removeRange(0, 4 + firstLength);
 
       try {
-        final text = utf8.decode(frameData);
-        debugPrint('텍스트 프레임: $text');
-      } catch (_) {
-        debugPrint('알 수 없는 바이너리 프레임, 저장 안 함');
+        final decoded = jsonDecode(utf8.decode(payload));
+        if (decoded is Map<String, dynamic>) {
+          _handleJsonMessage(decoded);
+        } else if (decoded is Map) {
+          _handleJsonMessage(Map<String, dynamic>.from(decoded));
+        }
+      } catch (e) {
+        debugPrint('JSON 프레임 파싱 실패: $e');
       }
     }
+  }
+
+  void _handleJsonMessage(Map<String, dynamic> message) {
+    final header = message['header']?.toString() ?? '';
+    final body = message['body'];
+    final cmd = body is Map ? body['CMD']?.toString() ?? '' : '';
+    final data = body is Map ? body['DATA'] : null;
+
+    debugPrint('RECV JSON -> header=$header cmd=$cmd data=$data');
+
+    if (header == 'ANALYSIS_DONE') {
+      _analysisResult = _normalizeAnalysisData(data);
+      _navigateIfReady(force: true);
+      return;
+    }
+
+    if (header == 'E001' && cmd == 'ANALYSIS_GET_LAST') {
+      _analysisResult = _normalizeAnalysisData(data);
+      _navigateIfReady(force: true);
+      return;
+    }
+
+    if (header == 'A001' && cmd == 'RUN') {
+      // ANALYSIS_DONE이 늦거나 분석 auto_run이 꺼진 환경을 위한 fallback.
+      _fallbackTimer ??= Timer(const Duration(seconds: 5), () async {
+        if (_hasNavigated || _analysisResult != null) return;
+        await _sendCommand(
+          header: 'E001',
+          cmd: 'ANALYSIS_GET_LAST',
+          data: '',
+        );
+        Timer(const Duration(seconds: 2), () => _navigateIfReady(force: true));
+      });
+    }
+  }
+
+  Map<String, dynamic>? _normalizeAnalysisData(dynamic data) {
+    if (data == null) return null;
+    if (data is Map<String, dynamic>) return data;
+    if (data is Map) return Map<String, dynamic>.from(data);
+    if (data is String) {
+      if (data.startsWith('Error Fail:')) {
+        return {'status': 'error', 'reason': data};
+      }
+      try {
+        final decoded = jsonDecode(data);
+        if (decoded is Map<String, dynamic>) return decoded;
+        if (decoded is Map) return Map<String, dynamic>.from(decoded);
+      } catch (_) {
+        return {'status': 'unknown', 'raw': data};
+      }
+    }
+    return {'status': 'unknown', 'raw': data.toString()};
   }
 
   Future<void> saveImage(List<int> data) async {
     if (_hasNavigated) return;
     try {
       final directory = await getApplicationDocumentsDirectory();
-      // ⭐ 촬영 시점 파일명 생성
-      final fileName = makeFileName("hi", "test");
+      final fileName = makeFileName("mark4", "capture");
       final filePath = "${directory.path}/$fileName";
 
-      File file = File(filePath);
-      await file.writeAsBytes(data);
+      final file = File(filePath);
+      await file.writeAsBytes(data, flush: true);
 
-      setState(() {
-        imagePath = filePath;
-      });
-
-      // ✅ 갤러리에도 저장
-      // final bytes = await file.readAsBytes();
-      // await FlutterImageGallerySaver.saveImage(Uint8List.fromList(bytes));
-
-      print("📁 이미지 영구 저장 완료: $filePath");
-
-      await Future.delayed(const Duration(milliseconds: 500));
-
-      if (!mounted || _hasNavigated) return;
-      _hasNavigated = true;
-      // var requestData = jsonEncode({
-      //   "header": "B001",
-      //   "body": {"CMD": "BL_CTRL", "DATA": "0"},
-      // });
-      // socket!.writeln(requestData);
-      // await socket!.flush();
-      // print("📡 BL_CTRL 요청 전송");
-
-      // if (!mounted) return;
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(
-          builder:
-              (context) => ResultSingle(
-                shutterSpeed: widget.shutterSpeed,
-                userName: widget.userName,
-                gender: widget.gender,
-                sampleType: widget.sampleType,
-                selectedItem: widget.selectedItem,
-                age: widget.age,
-                imagePath: filePath,
-                ip: widget.ip,
-              ),
-        ),
-      );
+      _imagePath = filePath;
+      debugPrint("이미지 저장 완료: $filePath");
+      _navigateIfReady();
     } catch (e) {
       _isSavingImage = false;
-      print("이미지 저장 실패: $e");
+      debugPrint("이미지 저장 실패: $e");
     }
+  }
+
+  void _navigateIfReady({bool force = false}) {
+    if (!mounted || _hasNavigated || _imagePath == null) return;
+    if (!force && _analysisResult == null) return;
+
+    _hasNavigated = true;
+    _fallbackTimer?.cancel();
+
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(
+        builder: (context) => ResultSingle(
+          shutterSpeed: widget.shutterSpeed,
+          userName: widget.userName,
+          gender: widget.gender,
+          sampleType: widget.sampleType,
+          selectedItem: widget.selectedItem,
+          age: widget.age,
+          imagePath: _imagePath!,
+          ip: widget.ip,
+          analysisResult: _analysisResult,
+        ),
+      ),
+    );
   }
 }
 
-// ---------- Custom Progress Ring Painter ----------
 class RingPainter extends CustomPainter {
   final double progress;
 
@@ -323,419 +356,35 @@ class RingPainter extends CustomPainter {
     final strokeWidth = 18.0;
     final rect = Offset.zero & size;
 
-    // Background ring
-    final bgPaint =
-        Paint()
-          ..color = const Color(0xFFE4EAF4)
-          ..style = PaintingStyle.stroke
-          ..strokeWidth = strokeWidth
-          ..strokeCap = StrokeCap.round;
+    final bgPaint = Paint()
+      ..color = const Color(0xFFE4EAF4)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = strokeWidth
+      ..strokeCap = StrokeCap.round;
 
-    // Foreground progress ring
-    final progressPaint =
-        Paint()
-          ..shader = const SweepGradient(
-            colors: [Color(0xFF3C66F4), Color(0xFF3C66F4)],
-          ).createShader(rect)
-          ..style = PaintingStyle.stroke
-          ..strokeWidth = strokeWidth
-          ..strokeCap = StrokeCap.round;
+    final progressPaint = Paint()
+      ..shader = const SweepGradient(
+        colors: [Color(0xFF3C66F4), Color(0xFF3C66F4)],
+      ).createShader(rect)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = strokeWidth
+      ..strokeCap = StrokeCap.round;
 
     final center = Offset(size.width / 2, size.height / 2);
     final radius = (size.width - strokeWidth) / 2;
 
-    // Draw background
     canvas.drawCircle(center, radius, bgPaint);
-
-    // Draw progress arc
-    final sweepAngle = 2 * 3.141592 * progress;
-
     canvas.drawArc(
       Rect.fromCircle(center: center, radius: radius),
       -3.141592 * 0.5,
-      sweepAngle,
+      2 * 3.141592 * progress,
       false,
       progressPaint,
     );
   }
 
   @override
-  bool shouldRepaint(covariant RingPainter oldDelegate) =>
-      oldDelegate.progress != progress;
+  bool shouldRepaint(covariant RingPainter oldDelegate) {
+    return oldDelegate.progress != progress;
+  }
 }
-
-// import 'dart:convert';
-// import 'dart:io';
-// import 'dart:typed_data';
-
-// import 'package:flutter/material.dart';
-// import 'package:mark4/components/time_set.dart';
-// import 'package:mark4/single/result_single.dart';
-// import 'package:path_provider/path_provider.dart';
-
-// class ProgressPageSingle extends StatefulWidget {
-//   final String userName, age, gender, sampleType, selectedItem;
-//   const ProgressPageSingle({
-//     super.key,
-//     required this.userName,
-//     required this.gender,
-//     required this.sampleType,
-//     required this.selectedItem,
-//     required this.age,
-//   });
-
-//   @override
-//   State<ProgressPageSingle> createState() => _ProgressPageSingleState();
-// }
-
-// class _ProgressPageSingleState extends State<ProgressPageSingle>
-//     with SingleTickerProviderStateMixin {
-//   late AnimationController controller;
-//   late Animation<double> progress;
-
-//   String? imagePath;
-//   final String iotDeviceIp = "192.168.0.72";
-//   int lightNumber = 1;
-//   Socket? socket;
-//   List<int> _buffer = [];
-
-//   @override
-//   void initState() {
-//     super.initState();
-
-//     controller = AnimationController(
-//       vsync: this,
-//       duration: const Duration(seconds: 7), // 0~100%까지 걸리는 시간
-//     );
-
-//     progress = Tween<double>(
-//       begin: 0.0,
-//       end: 1.0,
-//     ).animate(CurvedAnimation(parent: controller, curve: Curves.easeInOut));
-
-//     controller.forward(); // 자동 시작
-
-//     // 사진 촬영 및 수신 시작
-//     WidgetsBinding.instance.addPostFrameCallback((_) {
-//       captureImageFromIoT();
-//     });
-//   }
-
-//   @override
-//   void dispose() {
-//     controller.dispose();
-//     super.dispose();
-//   }
-
-//   @override
-//   Widget build(BuildContext context) {
-//     return Scaffold(
-//       backgroundColor: const Color(0xFFEFF3F8),
-//       appBar: AppBar(backgroundColor: const Color(0xFFEFF3F8)),
-//       body: SafeArea(
-//         child: Column(
-//           mainAxisAlignment: MainAxisAlignment.center,
-//           children: [
-//             // _topBar(),
-//             // const SizedBox(height: 40),
-
-//             // ---------- Animated Progress ----------
-//             Center(
-//               child: AnimatedBuilder(
-//                 animation: controller,
-//                 builder: (context, child) {
-//                   return CustomPaint(
-//                     painter: RingPainter(progress.value),
-//                     child: SizedBox(
-//                       width: 400,
-//                       height: 400,
-//                       child: Center(
-//                         child: Text(
-//                           "${(progress.value * 100).toInt()}%",
-//                           style: const TextStyle(
-//                             fontSize: 50,
-//                             fontWeight: FontWeight.bold,
-//                             color: Color(0xFF1A2A4A),
-//                           ),
-//                         ),
-//                       ),
-//                     ),
-//                   );
-//                 },
-//               ),
-//             ),
-
-//             const SizedBox(height: 35),
-//             const Text(
-//               "Reading..",
-//               style: TextStyle(
-//                 fontSize: 40,
-//                 fontWeight: FontWeight.w700,
-//                 color: Color(0xFF2850A7),
-//               ),
-//             ),
-//             const SizedBox(height: 8),
-//             const Text(
-//               "Do not Open the Tray",
-//               style: TextStyle(fontSize: 28, color: Color(0xFF2B478B)),
-//             ),
-//           ],
-//         ),
-//       ),
-//     );
-//   }
-
-//   Future<void> _sendCommand({
-//     required String header,
-//     required String cmd,
-//     required String data,
-//   }) async {
-//     if (socket == null) return;
-
-//     final requestData = jsonEncode({
-//       "header": header,
-//       "body": {"CMD": cmd, "DATA": data},
-//     });
-
-//     print("📤 SEND -> $requestData");
-//     socket!.writeln(requestData);
-//     await socket!.flush();
-//   }
-
-//   Future<void> captureImageFromIoT() async {
-//     try {
-//       socket = await Socket.connect(iotDeviceIp, 9191);
-//       print("✅ IoT 기기와 연결 성공");
-
-//       socket!.listen(
-//         (Uint8List data) {
-//           _buffer.addAll(data);
-//           processBuffer();
-//         },
-//         onError: (error) {
-//           print("❌ Socket error: $error");
-//         },
-//         onDone: () {
-//           print("🔌 Socket closed");
-//         },
-//       );
-
-//       const shutterValue = "100000";
-
-//       // 1. 셔터 속도 설정
-//       var requestData = jsonEncode({
-//         "header": "C001",
-//         "body": {"CMD": "SHUTTER", "DATA": shutterValue},
-//       });
-//       print("📷 Flutter에서 설정한 SHUTTER 값: $shutterValue");
-//       socket!.writeln(requestData);
-//       await socket!.flush();
-
-//       await Future.delayed(const Duration(milliseconds: 150));
-
-//       // 2. 현재 셔터 설정값 조회
-//       requestData = jsonEncode({
-//         "header": "A001",
-//         "body": {"CMD": "CFG_INFO", "DATA": "6"},
-//       });
-//       print("📡 SHUTTER 현재값 조회 요청 전송");
-//       socket!.writeln(requestData);
-//       await socket!.flush();
-
-//       await Future.delayed(const Duration(milliseconds: 150));
-
-//       // 3. LED 설정
-//       requestData = jsonEncode({
-//         "header": "F001",
-//         "body": {"CMD": "AD_LED_CTRL", "DATA": "80,100"},
-//       });
-//       socket!.writeln(requestData);
-//       await socket!.flush();
-
-//       await Future.delayed(const Duration(milliseconds: 100));
-
-//       // 4. 촬영 시작
-//       requestData = jsonEncode({
-//         "header": "B001",
-//         "body": {"CMD": "CAM_CTRL", "DATA": "1"},
-//       });
-//       socket!.writeln(requestData);
-//       await socket!.flush();
-//       print("📡 CAM_CTRL 요청 전송");
-
-//       await Future.delayed(const Duration(seconds: 1));
-
-//       // 5. 이미지 전송 요청
-//       requestData = jsonEncode({
-//         "header": "B001",
-//         "body": {"CMD": "IMG_TRANS", "DATA": "1"},
-//       });
-//       socket!.writeln(requestData);
-//       await socket!.flush();
-//       print("📡 IMG_TRANS 요청 전송");
-//     } catch (e) {
-//       print("❌ IoT 기기 연결 실패: $e");
-//     }
-//   }
-
-//   void processBuffer() {
-//     const int headerSize = 8;
-
-//     while (true) {
-//       if (_buffer.length < headerSize) break;
-
-//       Uint8List headerBytes = Uint8List.fromList(
-//         _buffer.sublist(0, headerSize),
-//       );
-
-//       int frameSize = ByteData.sublistView(
-//         headerBytes,
-//       ).getUint64(0, Endian.little);
-
-//       if (_buffer.length < headerSize + frameSize) break;
-
-//       List<int> frameData = _buffer.sublist(headerSize, headerSize + frameSize);
-//       _buffer = _buffer.sublist(headerSize + frameSize);
-
-//       // 먼저 텍스트/JSON인지 확인
-//       try {
-//         final text = utf8.decode(frameData).trim();
-//         print("📩 수신 텍스트: $text");
-
-//         final decoded = jsonDecode(text);
-//         _handleDeviceResponse(decoded);
-
-//         continue;
-//       } catch (_) {
-//         // JSON 아니면 이미지로 처리
-//         print("🖼️ 이미지 데이터 수신");
-//         saveImage(frameData);
-//         break;
-//       }
-//     }
-//   }
-
-//   void _handleDeviceResponse(dynamic decoded) {
-//     try {
-//       final header = decoded["header"];
-//       final body = decoded["body"];
-//       final cmd = body["CMD"];
-//       final data = body["DATA"];
-
-//       print("📦 header=$header, cmd=$cmd, data=$data");
-
-//       // 셔터 설정 응답
-//       if (header == "C001" && cmd == "SHUTTER") {
-//         print("📷 장비 응답 SHUTTER 값: $data");
-//       }
-
-//       // 현재 설정값 조회 응답
-//       if (header == "A001" && cmd == "CFG_INFO") {
-//         print("📷 현재 조회된 SHUTTER 설정값: $data");
-//       }
-//     } catch (e) {
-//       print("❌ 응답 파싱 실패: $e");
-//     }
-//   }
-
-//   Future<void> saveImage(List<int> data) async {
-//     try {
-//       final directory = await getApplicationDocumentsDirectory();
-//       // ⭐ 촬영 시점 파일명 생성
-//       final fileName = makeFileName("hi", "test");
-//       final filePath = "${directory.path}/$fileName";
-
-//       File file = File(filePath);
-//       await file.writeAsBytes(data);
-
-//       setState(() {
-//         imagePath = filePath;
-//       });
-
-//       // ✅ 갤러리에도 저장
-//       // final bytes = await file.readAsBytes();
-//       // await FlutterImageGallerySaver.saveImage(Uint8List.fromList(bytes));
-
-//       print("📁 이미지 영구 저장 완료: $filePath");
-
-//       await Future.delayed(const Duration(milliseconds: 500));
-//       // var requestData = jsonEncode({
-//       //   "header": "B001",
-//       //   "body": {"CMD": "BL_CTRL", "DATA": "0"},
-//       // });
-//       // socket!.writeln(requestData);
-//       // await socket!.flush();
-//       // print("📡 BL_CTRL 요청 전송");
-
-//       // if (!mounted) return;
-//       Navigator.pushReplacement(
-//         context,
-//         MaterialPageRoute(
-//           builder:
-//               (context) => ResultSingle(
-//                 userName: widget.userName,
-//                 gender: widget.gender,
-//                 sampleType: widget.sampleType,
-//                 selectedItem: widget.selectedItem,
-//                 age: widget.age,
-//                 imagePath: filePath,
-//               ),
-//         ),
-//       );
-//     } catch (e) {
-//       print("이미지 저장 실패: $e");
-//     }
-//   }
-// }
-
-// // ---------- Custom Progress Ring Painter ----------
-// class RingPainter extends CustomPainter {
-//   final double progress;
-
-//   RingPainter(this.progress);
-
-//   @override
-//   void paint(Canvas canvas, Size size) {
-//     final strokeWidth = 18.0;
-//     final rect = Offset.zero & size;
-
-//     // Background ring
-//     final bgPaint =
-//         Paint()
-//           ..color = const Color(0xFFE4EAF4)
-//           ..style = PaintingStyle.stroke
-//           ..strokeWidth = strokeWidth
-//           ..strokeCap = StrokeCap.round;
-
-//     // Foreground progress ring
-//     final progressPaint =
-//         Paint()
-//           ..shader = const SweepGradient(
-//             colors: [Color(0xFF3C66F4), Color(0xFF3C66F4)],
-//           ).createShader(rect)
-//           ..style = PaintingStyle.stroke
-//           ..strokeWidth = strokeWidth
-//           ..strokeCap = StrokeCap.round;
-
-//     final center = Offset(size.width / 2, size.height / 2);
-//     final radius = (size.width - strokeWidth) / 2;
-
-//     // Draw background
-//     canvas.drawCircle(center, radius, bgPaint);
-
-//     // Draw progress arc
-//     final sweepAngle = 2 * 3.141592 * progress;
-
-//     canvas.drawArc(
-//       Rect.fromCircle(center: center, radius: radius),
-//       -3.141592 * 0.5,
-//       sweepAngle,
-//       false,
-//       progressPaint,
-//     );
-//   }
-
-//   @override
-//   bool shouldRepaint(covariant RingPainter oldDelegate) =>
-//       oldDelegate.progress != progress;
-// }
