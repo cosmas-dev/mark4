@@ -315,8 +315,9 @@ class _ResultSingleState extends State<ResultSingle> {
           child: CenterCroppedFileImage(
             imagePath: widget.imagePath,
             // MARK-4 촬영 이미지에서 중앙 테스트 라인 영역만 실제 픽셀 기준으로 잘라서 확대 표시한다.
-            // 값이 작을수록 더 많이 확대된다. 중앙 빨간 라인이 작게 보이면 0.10 / 0.30 쪽으로 줄이면 된다.
-            cropWidthRatio: 0.12,
+            // cropWidthRatio가 작을수록 더 많이 확대된다.
+            // 화면 박스 비율에 맞춰 crop 높이를 자동 계산하므로 이미지가 찌그러지지 않는다.
+            cropWidthRatio: 0.18,
             cropHeightRatio: 0.36,
           ),
         ),
@@ -555,8 +556,23 @@ class _CenterCropPainter extends CustomPainter {
     final imageWidth = image.width.toDouble();
     final imageHeight = image.height.toDouble();
 
-    final cropWidth = (imageWidth * cropWidthRatio).clamp(1.0, imageWidth);
-    final cropHeight = (imageHeight * cropHeightRatio).clamp(1.0, imageHeight);
+    final viewAspect = size.width / size.height;
+
+    // 먼저 중앙부 crop 폭을 정하고, 화면 박스 비율과 동일한 높이를 계산한다.
+    // 이렇게 src 비율과 dst 비율을 맞추면 빨간 라인 영역이 가로/세로로 찌그러지지 않는다.
+    var cropWidth = (imageWidth * cropWidthRatio).clamp(1.0, imageWidth);
+    var cropHeight = cropWidth / viewAspect;
+
+    // 계산된 높이가 너무 커지면 cropHeightRatio를 최대 높이로 사용하고, 폭을 다시 맞춘다.
+    final maxCropHeight = (imageHeight * cropHeightRatio).clamp(
+      1.0,
+      imageHeight,
+    );
+    if (cropHeight > maxCropHeight) {
+      cropHeight = maxCropHeight;
+      cropWidth = (cropHeight * viewAspect).clamp(1.0, imageWidth);
+    }
+
     final left = ((imageWidth - cropWidth) / 2).clamp(
       0.0,
       imageWidth - cropWidth,
