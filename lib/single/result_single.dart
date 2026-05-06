@@ -314,9 +314,6 @@ class _ResultSingleState extends State<ResultSingle> {
           height: imageHeight,
           child: CenterCroppedFileImage(
             imagePath: widget.imagePath,
-            // MARK-4 촬영 이미지에서 중앙 테스트 라인 영역만 실제 픽셀 기준으로 잘라서 확대 표시한다.
-            // cropWidthRatio가 작을수록 더 많이 확대된다.
-            // 화면 박스 비율에 맞춰 crop 높이를 자동 계산하므로 이미지가 찌그러지지 않는다.
             cropWidthRatio: 0.18,
             cropHeightRatio: 0.36,
           ),
@@ -449,12 +446,14 @@ class CenterCroppedFileImage extends StatefulWidget {
   final String imagePath;
   final double cropWidthRatio;
   final double cropHeightRatio;
+  final double cropCenterYRatio;
 
   const CenterCroppedFileImage({
     super.key,
     required this.imagePath,
     this.cropWidthRatio = 0.12,
     this.cropHeightRatio = 0.36,
+    this.cropCenterYRatio = 0.55,
   });
 
   @override
@@ -535,6 +534,7 @@ class _CenterCroppedFileImageState extends State<CenterCroppedFileImage> {
         image: _image!,
         cropWidthRatio: widget.cropWidthRatio,
         cropHeightRatio: widget.cropHeightRatio,
+        cropCenterYRatio: widget.cropCenterYRatio,
       ),
     );
   }
@@ -544,11 +544,13 @@ class _CenterCropPainter extends CustomPainter {
   final ui.Image image;
   final double cropWidthRatio;
   final double cropHeightRatio;
+  final double cropCenterYRatio;
 
   _CenterCropPainter({
     required this.image,
     required this.cropWidthRatio,
     required this.cropHeightRatio,
+    required this.cropCenterYRatio,
   });
 
   @override
@@ -577,10 +579,9 @@ class _CenterCropPainter extends CustomPainter {
       0.0,
       imageWidth - cropWidth,
     );
-    final top = ((imageHeight - cropHeight) / 2).clamp(
-      0.0,
-      imageHeight - cropHeight,
-    );
+    final centerY = imageHeight * cropCenterYRatio;
+
+    final top = (centerY - cropHeight / 2).clamp(0.0, imageHeight - cropHeight);
 
     final src = Rect.fromLTWH(left, top, cropWidth, cropHeight);
     final dst = Rect.fromLTWH(0, 0, size.width, size.height);
