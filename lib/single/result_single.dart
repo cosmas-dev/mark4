@@ -310,6 +310,7 @@ class _ResultSingleState extends State<ResultSingle> {
           fit: BoxFit.cover,
           width: double.infinity,
           scale: 3,
+          height: 360,
           errorBuilder: (context, error, stackTrace) {
             return const Padding(
               padding: EdgeInsets.all(32),
