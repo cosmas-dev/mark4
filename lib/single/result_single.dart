@@ -985,9 +985,9 @@ class _ResultSingleState extends State<ResultSingle> {
                   ),
                   child: CenterCroppedFileImage(
                     imagePath: widget.imagePath,
-                    cropWidthRatio: 0.18,
-                    cropHeightRatio: 0.36,
-                    cropCenterYRatio: 0.50,
+                    cropWidthRatio: 0.10,
+                    cropHeightRatio: 0.30,
+                    cropCenterYRatio: 0.62,
                   ),
                 ),
               ),
@@ -1005,9 +1005,9 @@ class _ResultSingleState extends State<ResultSingle> {
 
                             // Analysis Plot PNG 안에서 왼쪽 위 ROI heatmap만 crop.
                             // 위치가 조금 안 맞으면 아래 4개 값만 조절하면 됨.
-                            srcLeftRatio: 0.18,
-                            srcTopRatio: 0.17,
-                            srcWidthRatio: 0.24,
+                            srcLeftRatio: 0.12,
+                            srcTopRatio: 0.10,
+                            srcWidthRatio: 0.18,
                             srcHeightRatio: 0.42,
                           )
                           : const ColoredBox(
