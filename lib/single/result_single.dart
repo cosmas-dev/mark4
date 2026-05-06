@@ -618,6 +618,7 @@ class ResultSingle extends StatefulWidget {
       imagePath,
       shutterSpeed,
       ip;
+
   final String? analysisPlotPath;
   final Map<String, dynamic>? analysisResult;
 
@@ -646,7 +647,33 @@ class _ResultSingleState extends State<ResultSingle> {
   @override
   void initState() {
     super.initState();
+
+    _debugPrintResultData();
     _saveResultOnce();
+  }
+
+  void _debugPrintResultData() {
+    debugPrint('========== RESULT SINGLE DATA ==========');
+    debugPrint('userName: ${widget.userName}');
+    debugPrint('age: ${widget.age}');
+    debugPrint('gender: ${widget.gender}');
+    debugPrint('sampleType: ${widget.sampleType}');
+    debugPrint('selectedItem: ${widget.selectedItem}');
+    debugPrint('imagePath: ${widget.imagePath}');
+    debugPrint('analysisPlotPath: ${widget.analysisPlotPath}');
+    debugPrint('shutterSpeed: ${widget.shutterSpeed}');
+    debugPrint('ip: ${widget.ip}');
+    debugPrint('analysisResult: ${widget.analysisResult}');
+    debugPrint('parsed grade: ${_readText(['grade', 'verdict', 'result'])}');
+    debugPrint('parsed status: ${_readText(['status', 'state'])}');
+    debugPrint('parsed reason: ${_readText(['reason', 'error'])}');
+    debugPrint(
+      'parsed retest_recommended: ${_readBool(['retest_recommended', 'retestRecommended', 'retest'])}',
+    );
+    debugPrint(
+      'parsed type_mismatch_warning: ${_readBool(['type_mismatch_warning', 'typeMismatchWarning', 'type_warning'])}',
+    );
+    debugPrint('========================================');
   }
 
   Future<void> _saveResultOnce() async {
@@ -678,6 +705,7 @@ class _ResultSingleState extends State<ResultSingle> {
           ? grade.toUpperCase()
           : '${grade.toUpperCase()} / ${status.toUpperCase()}';
     }
+
     return 'Analysis Pending';
   }
 
@@ -714,23 +742,34 @@ class _ResultSingleState extends State<ResultSingle> {
     for (final key in keys) {
       final value = _lookup(key);
       if (value == null || value is Map || value is List) continue;
+
       final text = value.toString().trim();
       if (text.isNotEmpty) return text;
     }
+
     return '-';
   }
 
   bool? _readBool(List<String> keys) {
     for (final key in keys) {
       final value = _lookup(key);
+
       if (value is bool) return value;
       if (value is num) return value != 0;
+
       if (value is String) {
         final normalized = value.trim().toLowerCase();
-        if (['true', 'yes', 'y', '1'].contains(normalized)) return true;
-        if (['false', 'no', 'n', '0'].contains(normalized)) return false;
+
+        if (['true', 'yes', 'y', '1'].contains(normalized)) {
+          return true;
+        }
+
+        if (['false', 'no', 'n', '0'].contains(normalized)) {
+          return false;
+        }
       }
     }
+
     return null;
   }
 
@@ -741,11 +780,19 @@ class _ResultSingleState extends State<ResultSingle> {
 
   Color _gradeColor(String grade) {
     final normalized = grade.toLowerCase();
-    if (normalized.contains('positive')) return const Color(0xFFE85D5D);
-    if (normalized.contains('negative')) return const Color(0xFF227BFF);
+
+    if (normalized.contains('positive')) {
+      return const Color(0xFFE85D5D);
+    }
+
+    if (normalized.contains('negative')) {
+      return const Color(0xFF227BFF);
+    }
+
     if (normalized.contains('invalid') || normalized.contains('error')) {
       return const Color(0xFF6B6B6B);
     }
+
     return const Color(0xFF2B478B);
   }
 
@@ -782,8 +829,6 @@ class _ResultSingleState extends State<ResultSingle> {
                     const SizedBox(height: 16),
                     _capturedImage(),
                     const SizedBox(height: 16),
-                    _analysisPlotImage(),
-                    const SizedBox(height: 16),
                     _patientCard(),
                   ],
                 ),
@@ -799,11 +844,13 @@ class _ResultSingleState extends State<ResultSingle> {
   Widget _summaryCard(String grade, String status, String reason) {
     final color = _gradeColor(grade == '-' ? status : grade);
     final hasAnalysis = widget.analysisResult != null;
+
     final retestRecommended = _readBool([
       'retest_recommended',
       'retestRecommended',
       'retest',
     ]);
+
     final typeMismatchWarning = _readBool([
       'type_mismatch_warning',
       'typeMismatchWarning',
@@ -902,8 +949,12 @@ class _ResultSingleState extends State<ResultSingle> {
   Widget _capturedImage() {
     const imageHeight = 360.0;
 
+    final plotPath = widget.analysisPlotPath;
+    final hasAnalysisPlot =
+        plotPath != null && plotPath.isNotEmpty && File(plotPath).existsSync();
+
     return Container(
-      padding: const EdgeInsets.all(12),
+      padding: EdgeInsets.zero,
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(22),
@@ -916,78 +967,25 @@ class _ResultSingleState extends State<ResultSingle> {
         ],
       ),
       child: ClipRRect(
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(22),
         child: SizedBox(
           width: double.infinity,
           height: imageHeight,
-          child: CenterCroppedFileImage(
-            imagePath: widget.imagePath,
-            // MARK-4 촬영 이미지에서 중앙 테스트 라인 영역만 실제 픽셀 기준으로 잘라서 확대 표시한다.
-            // cropWidthRatio가 작을수록 더 많이 확대된다.
-            // 화면 박스 비율에 맞춰 crop 높이를 자동 계산하므로 이미지가 찌그러지지 않는다.
-            cropWidthRatio: 0.18,
-            cropHeightRatio: 0.36,
-          ),
+          child:
+              hasAnalysisPlot
+                  ? AnalysisPlotRoiCropImage(
+                    imagePath: plotPath,
+                    srcLeftRatio: 0.20,
+                    srcTopRatio: 0.17,
+                    srcWidthRatio: 0.24,
+                    srcHeightRatio: 0.42,
+                  )
+                  : CenterCroppedFileImage(
+                    imagePath: widget.imagePath,
+                    cropWidthRatio: 0.18,
+                    cropHeightRatio: 0.36,
+                  ),
         ),
-      ),
-    );
-  }
-
-  Widget _analysisPlotImage() {
-    final path = widget.analysisPlotPath;
-    final hasImage = path != null && path.isNotEmpty && File(path).existsSync();
-
-    return Container(
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(22),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withAlpha(12),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Padding(
-            padding: EdgeInsets.fromLTRB(6, 4, 6, 10),
-            child: Text(
-              'Analysis Plot',
-              style: TextStyle(
-                color: Color(0xFF1A2A4A),
-                fontSize: 20,
-                fontWeight: FontWeight.w800,
-              ),
-            ),
-          ),
-          ClipRRect(
-            borderRadius: BorderRadius.circular(16),
-            child: SizedBox(
-              width: double.infinity,
-              height: 360,
-              child:
-                  hasImage
-                      ? Image.file(
-                        File(path),
-                        fit: BoxFit.contain,
-                        alignment: Alignment.center,
-                      )
-                      : const ColoredBox(
-                        color: Colors.black,
-                        child: Center(
-                          child: Text(
-                            '분석 PNG를 수신하지 못했습니다.',
-                            style: TextStyle(color: Colors.white),
-                          ),
-                        ),
-                      ),
-            ),
-          ),
-        ],
       ),
     );
   }
@@ -1116,12 +1114,14 @@ class CenterCroppedFileImage extends StatefulWidget {
   final String imagePath;
   final double cropWidthRatio;
   final double cropHeightRatio;
+  final double cropCenterYRatio;
 
   const CenterCroppedFileImage({
     super.key,
     required this.imagePath,
     this.cropWidthRatio = 0.12,
     this.cropHeightRatio = 0.36,
+    this.cropCenterYRatio = 0.50,
   });
 
   @override
@@ -1141,6 +1141,7 @@ class _CenterCroppedFileImageState extends State<CenterCroppedFileImage> {
   @override
   void didUpdateWidget(covariant CenterCroppedFileImage oldWidget) {
     super.didUpdateWidget(oldWidget);
+
     if (oldWidget.imagePath != widget.imagePath) {
       _image?.dispose();
       _image = null;
@@ -1154,15 +1155,18 @@ class _CenterCroppedFileImageState extends State<CenterCroppedFileImage> {
       final bytes = await File(widget.imagePath).readAsBytes();
       final codec = await ui.instantiateImageCodec(bytes);
       final frame = await codec.getNextFrame();
+
       if (!mounted) {
         frame.image.dispose();
         return;
       }
+
       setState(() {
         _image = frame.image;
       });
     } catch (e) {
       if (!mounted) return;
+
       setState(() {
         _error = e;
       });
@@ -1202,6 +1206,7 @@ class _CenterCroppedFileImageState extends State<CenterCroppedFileImage> {
         image: _image!,
         cropWidthRatio: widget.cropWidthRatio,
         cropHeightRatio: widget.cropHeightRatio,
+        cropCenterYRatio: widget.cropCenterYRatio,
       ),
     );
   }
@@ -1211,11 +1216,13 @@ class _CenterCropPainter extends CustomPainter {
   final ui.Image image;
   final double cropWidthRatio;
   final double cropHeightRatio;
+  final double cropCenterYRatio;
 
   _CenterCropPainter({
     required this.image,
     required this.cropWidthRatio,
     required this.cropHeightRatio,
+    required this.cropCenterYRatio,
   });
 
   @override
@@ -1225,16 +1232,14 @@ class _CenterCropPainter extends CustomPainter {
 
     final viewAspect = size.width / size.height;
 
-    // 먼저 중앙부 crop 폭을 정하고, 화면 박스 비율과 동일한 높이를 계산한다.
-    // 이렇게 src 비율과 dst 비율을 맞추면 빨간 라인 영역이 가로/세로로 찌그러지지 않는다.
     var cropWidth = (imageWidth * cropWidthRatio).clamp(1.0, imageWidth);
     var cropHeight = cropWidth / viewAspect;
 
-    // 계산된 높이가 너무 커지면 cropHeightRatio를 최대 높이로 사용하고, 폭을 다시 맞춘다.
     final maxCropHeight = (imageHeight * cropHeightRatio).clamp(
       1.0,
       imageHeight,
     );
+
     if (cropHeight > maxCropHeight) {
       cropHeight = maxCropHeight;
       cropWidth = (cropHeight * viewAspect).clamp(1.0, imageWidth);
@@ -1244,10 +1249,10 @@ class _CenterCropPainter extends CustomPainter {
       0.0,
       imageWidth - cropWidth,
     );
-    final top = ((imageHeight - cropHeight) / 2).clamp(
-      0.0,
-      imageHeight - cropHeight,
-    );
+
+    final centerY = imageHeight * cropCenterYRatio;
+
+    final top = (centerY - cropHeight / 2).clamp(0.0, imageHeight - cropHeight);
 
     final src = Rect.fromLTWH(left, top, cropWidth, cropHeight);
     final dst = Rect.fromLTWH(0, 0, size.width, size.height);
@@ -1265,6 +1270,179 @@ class _CenterCropPainter extends CustomPainter {
   bool shouldRepaint(covariant _CenterCropPainter oldDelegate) {
     return oldDelegate.image != image ||
         oldDelegate.cropWidthRatio != cropWidthRatio ||
-        oldDelegate.cropHeightRatio != cropHeightRatio;
+        oldDelegate.cropHeightRatio != cropHeightRatio ||
+        oldDelegate.cropCenterYRatio != cropCenterYRatio;
+  }
+}
+
+class AnalysisPlotRoiCropImage extends StatefulWidget {
+  final String imagePath;
+
+  /// Analysis Plot PNG 전체 기준 crop 시작 X 위치 비율.
+  /// 값을 키우면 crop 영역이 오른쪽으로 이동.
+  final double srcLeftRatio;
+
+  /// Analysis Plot PNG 전체 기준 crop 시작 Y 위치 비율.
+  /// 값을 키우면 crop 영역이 아래로 이동.
+  final double srcTopRatio;
+
+  /// Analysis Plot PNG 전체 기준 crop 가로 폭 비율.
+  /// 값을 줄이면 더 확대됨.
+  final double srcWidthRatio;
+
+  /// Analysis Plot PNG 전체 기준 crop 세로 폭 비율.
+  /// 값을 줄이면 더 확대됨.
+  final double srcHeightRatio;
+
+  const AnalysisPlotRoiCropImage({
+    super.key,
+    required this.imagePath,
+    this.srcLeftRatio = 0.20,
+    this.srcTopRatio = 0.17,
+    this.srcWidthRatio = 0.24,
+    this.srcHeightRatio = 0.42,
+  });
+
+  @override
+  State<AnalysisPlotRoiCropImage> createState() =>
+      _AnalysisPlotRoiCropImageState();
+}
+
+class _AnalysisPlotRoiCropImageState extends State<AnalysisPlotRoiCropImage> {
+  ui.Image? _image;
+  Object? _error;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadImage();
+  }
+
+  @override
+  void didUpdateWidget(covariant AnalysisPlotRoiCropImage oldWidget) {
+    super.didUpdateWidget(oldWidget);
+
+    if (oldWidget.imagePath != widget.imagePath) {
+      _image?.dispose();
+      _image = null;
+      _error = null;
+      _loadImage();
+    }
+  }
+
+  Future<void> _loadImage() async {
+    try {
+      final bytes = await File(widget.imagePath).readAsBytes();
+      final codec = await ui.instantiateImageCodec(bytes);
+      final frame = await codec.getNextFrame();
+
+      if (!mounted) {
+        frame.image.dispose();
+        return;
+      }
+
+      setState(() {
+        _image = frame.image;
+      });
+    } catch (e) {
+      if (!mounted) return;
+
+      setState(() {
+        _error = e;
+      });
+    }
+  }
+
+  @override
+  void dispose() {
+    _image?.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (_error != null) {
+      return const ColoredBox(
+        color: Colors.black,
+        child: Center(
+          child: Text(
+            'Analysis Plot 이미지를 불러올 수 없습니다.',
+            style: TextStyle(color: Colors.white),
+          ),
+        ),
+      );
+    }
+
+    if (_image == null) {
+      return const ColoredBox(
+        color: Colors.black,
+        child: Center(child: CircularProgressIndicator()),
+      );
+    }
+
+    return CustomPaint(
+      size: Size.infinite,
+      painter: _AnalysisPlotRoiCropPainter(
+        image: _image!,
+        srcLeftRatio: widget.srcLeftRatio,
+        srcTopRatio: widget.srcTopRatio,
+        srcWidthRatio: widget.srcWidthRatio,
+        srcHeightRatio: widget.srcHeightRatio,
+      ),
+    );
+  }
+}
+
+class _AnalysisPlotRoiCropPainter extends CustomPainter {
+  final ui.Image image;
+  final double srcLeftRatio;
+  final double srcTopRatio;
+  final double srcWidthRatio;
+  final double srcHeightRatio;
+
+  _AnalysisPlotRoiCropPainter({
+    required this.image,
+    required this.srcLeftRatio,
+    required this.srcTopRatio,
+    required this.srcWidthRatio,
+    required this.srcHeightRatio,
+  });
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final imageWidth = image.width.toDouble();
+    final imageHeight = image.height.toDouble();
+
+    var srcLeft = imageWidth * srcLeftRatio;
+    var srcTop = imageHeight * srcTopRatio;
+    var srcWidth = imageWidth * srcWidthRatio;
+    var srcHeight = imageHeight * srcHeightRatio;
+
+    srcWidth = srcWidth.clamp(1.0, imageWidth);
+    srcHeight = srcHeight.clamp(1.0, imageHeight);
+
+    srcLeft = srcLeft.clamp(0.0, imageWidth - srcWidth);
+    srcTop = srcTop.clamp(0.0, imageHeight - srcHeight);
+
+    final src = Rect.fromLTWH(srcLeft, srcTop, srcWidth, srcHeight);
+    final dst = Rect.fromLTWH(0, 0, size.width, size.height);
+
+    canvas.drawRect(dst, Paint()..color = Colors.black);
+
+    canvas.drawImageRect(
+      image,
+      src,
+      dst,
+      Paint()..filterQuality = FilterQuality.high,
+    );
+  }
+
+  @override
+  bool shouldRepaint(covariant _AnalysisPlotRoiCropPainter oldDelegate) {
+    return oldDelegate.image != image ||
+        oldDelegate.srcLeftRatio != srcLeftRatio ||
+        oldDelegate.srcTopRatio != srcTopRatio ||
+        oldDelegate.srcWidthRatio != srcWidthRatio ||
+        oldDelegate.srcHeightRatio != srcHeightRatio;
   }
 }
