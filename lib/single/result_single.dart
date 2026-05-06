@@ -209,7 +209,8 @@ class _ResultSingleState extends State<ResultSingle> {
                 ),
               ),
             ),
-            _bottomActions(context),
+            // _bottomActions(context),
+            _bottomButtons(context),
           ],
         ),
       ),
@@ -296,7 +297,7 @@ class _ResultSingleState extends State<ResultSingle> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           SizedBox(
-            width: 190,
+            width: 500,
             child: Text(
               label,
               style: const TextStyle(
@@ -437,7 +438,7 @@ class _ResultSingleState extends State<ResultSingle> {
             width: 130,
             child: Text(
               label,
-              style: const TextStyle(color: Color(0xFF6B6B6B), fontSize: 15),
+              style: const TextStyle(color: Color(0xFF6B6B6B), fontSize: 33),
             ),
           ),
           Expanded(
@@ -445,7 +446,7 @@ class _ResultSingleState extends State<ResultSingle> {
               value.isEmpty ? '-' : value,
               style: const TextStyle(
                 color: Color(0xFF1A2A4A),
-                fontSize: 35,
+                fontSize: 33,
                 fontWeight: FontWeight.w700,
               ),
             ),
@@ -455,125 +456,127 @@ class _ResultSingleState extends State<ResultSingle> {
     );
   }
 
-  Widget _bottomActions(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.fromLTRB(20, 14, 20, 20),
-      decoration: const BoxDecoration(
-        color: Colors.white,
-        boxShadow: [
-          BoxShadow(
-            blurRadius: 8,
-            color: Colors.black12,
-            offset: Offset(0, -2),
-          ),
-        ],
-      ),
+  //   Widget _bottomActions(BuildContext context) {
+  //     return Container(
+  //       padding: const EdgeInsets.fromLTRB(20, 14, 20, 20),
+  //       decoration: const BoxDecoration(
+  //         color: Colors.white,
+  //         boxShadow: [
+  //           BoxShadow(
+  //             blurRadius: 8,
+  //             color: Colors.black12,
+  //             offset: Offset(0, -2),
+  //           ),
+  //         ],
+  //       ),
+  //       child: Row(
+  //         children: [
+  //           Expanded(
+  //             child: _actionButton(
+  //               text: 'Back',
+  //               color: const Color(0xFF6B6B6B),
+  //               onTap: () => Navigator.pop(context),
+  //             ),
+  //           ),
+  //           const SizedBox(width: 12),
+  //           Expanded(
+  //             child: _actionButton(
+  //               text: 'Completed',
+  //               color: const Color(0xFF227BFF),
+  //               onTap:
+  //                   () => Navigator.popUntil(context, (route) => route.isFirst),
+  //             ),
+  //           ),
+  //         ],
+  //       ),
+  //     );
+  //   }
+
+  //   Widget _actionButton({
+  //     required String text,
+  //     required Color color,
+  //     required VoidCallback onTap,
+  //   }) {
+  //     return GestureDetector(
+  //       onTap: onTap,
+  //       child: Container(
+  //         height: 58,
+  //         decoration: BoxDecoration(
+  //           color: color,
+  //           borderRadius: BorderRadius.circular(16),
+  //         ),
+  //         child: Center(
+  //           child: Text(
+  //             text,
+  //             style: const TextStyle(
+  //               color: Colors.white,
+  //               fontSize: 20,
+  //               fontWeight: FontWeight.w800,
+  //             ),
+  //           ),
+  //         ),
+  //       ),
+  //     );
+  //   }
+  // }
+
+  // ======================= BOTTOM BUTTONS =======================
+  Widget _bottomButtons(BuildContext context) {
+    return SizedBox(
+      height: 200,
       child: Row(
         children: [
           Expanded(
-            child: _actionButton(
-              text: 'Back',
-              color: const Color(0xFF6B6B6B),
-              onTap: () => Navigator.pop(context),
-            ),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: _actionButton(
-              text: 'Completed',
-              color: const Color(0xFF227BFF),
+            child: InkWell(
               onTap:
                   () => Navigator.popUntil(context, (route) => route.isFirst),
+              child: Container(
+                color: const Color(0xFF227BFF),
+                child: const Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.play_arrow, color: Colors.white, size: 60),
+                      SizedBox(height: 4),
+                      Text(
+                        "Back",
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 50,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+          Expanded(
+            child: Container(
+              decoration: const BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [Color(0xFF7D7D7D), Color(0xFF555555)],
+                ),
+              ),
+              child: const Center(
+                child: Text(
+                  "Completed",
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 45,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
             ),
           ),
         ],
       ),
     );
   }
-
-  Widget _actionButton({
-    required String text,
-    required Color color,
-    required VoidCallback onTap,
-  }) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        height: 58,
-        decoration: BoxDecoration(
-          color: color,
-          borderRadius: BorderRadius.circular(16),
-        ),
-        child: Center(
-          child: Text(
-            text,
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 20,
-              fontWeight: FontWeight.w800,
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-// ======================= BOTTOM BUTTONS =======================
-Widget _bottomButtons(BuildContext context) {
-  return SizedBox(
-    height: 200,
-    child: Row(
-      children: [
-        Expanded(
-          child: InkWell(
-            onTap: () => Navigator.popUntil(context, (route) => route.isFirst),
-            child: Container(
-              color: const Color(0xFF227BFF),
-              child: const Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(Icons.play_arrow, color: Colors.white, size: 60),
-                    SizedBox(height: 4),
-                    Text(
-                      "Back",
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 50,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
-        ),
-        Expanded(
-          child: Container(
-            decoration: const BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-                colors: [Color(0xFF7D7D7D), Color(0xFF555555)],
-              ),
-            ),
-            child: const Center(
-              child: Text(
-                "Completed",
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 45,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ),
-          ),
-        ),
-      ],
-    ),
-  );
 }
 
 class CenterCroppedFileImage extends StatefulWidget {
