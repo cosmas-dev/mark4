@@ -43,32 +43,7 @@ class _ResultSingleState extends State<ResultSingle> {
   @override
   void initState() {
     super.initState();
-    _debugPrintResultData();
     _saveResultOnce();
-  }
-
-  void _debugPrintResultData() {
-    debugPrint('========== RESULT SINGLE DATA ==========');
-    debugPrint('userName: ${widget.userName}');
-    debugPrint('age: ${widget.age}');
-    debugPrint('gender: ${widget.gender}');
-    debugPrint('sampleType: ${widget.sampleType}');
-    debugPrint('selectedItem: ${widget.selectedItem}');
-    debugPrint('imagePath: ${widget.imagePath}');
-    debugPrint('analysisPlotPath: ${widget.analysisPlotPath}');
-    debugPrint('shutterSpeed: ${widget.shutterSpeed}');
-    debugPrint('ip: ${widget.ip}');
-    debugPrint('analysisResult: ${widget.analysisResult}');
-    debugPrint('parsed grade: ${_readText(['grade', 'verdict', 'result'])}');
-    debugPrint('parsed status: ${_readText(['status', 'state'])}');
-    debugPrint('parsed reason: ${_readText(['reason', 'error'])}');
-    debugPrint(
-      'parsed retest_recommended: ${_readBool(['retest_recommended', 'retestRecommended', 'retest'])}',
-    );
-    debugPrint(
-      'parsed type_mismatch_warning: ${_readBool(['type_mismatch_warning', 'typeMismatchWarning', 'type_warning'])}',
-    );
-    debugPrint('========================================');
   }
 
   Future<void> _saveResultOnce() async {
@@ -285,7 +260,7 @@ class _ResultSingleState extends State<ResultSingle> {
                 hasAnalysis ? 'Analysis Completed' : 'Analysis Pending',
                 style: const TextStyle(
                   color: Color(0xFF2B478B),
-                  fontSize: 18,
+                  fontSize: 35,
                   fontWeight: FontWeight.w700,
                 ),
               ),
@@ -325,7 +300,7 @@ class _ResultSingleState extends State<ResultSingle> {
             child: Text(
               label,
               style: const TextStyle(
-                fontSize: 16,
+                fontSize: 33,
                 color: Color(0xFF6B6B6B),
                 fontWeight: FontWeight.w600,
               ),
@@ -335,7 +310,7 @@ class _ResultSingleState extends State<ResultSingle> {
             child: Text(
               value,
               style: const TextStyle(
-                fontSize: 17,
+                fontSize: 33,
                 color: Color(0xFF1A2A4A),
                 fontWeight: FontWeight.w800,
               ),
@@ -438,7 +413,7 @@ class _ResultSingleState extends State<ResultSingle> {
             'Sample Information',
             style: TextStyle(
               color: Color(0xFF1A2A4A),
-              fontSize: 20,
+              fontSize: 35,
               fontWeight: FontWeight.w800,
             ),
           ),
@@ -470,7 +445,7 @@ class _ResultSingleState extends State<ResultSingle> {
               value.isEmpty ? '-' : value,
               style: const TextStyle(
                 color: Color(0xFF1A2A4A),
-                fontSize: 16,
+                fontSize: 35,
                 fontWeight: FontWeight.w700,
               ),
             ),
