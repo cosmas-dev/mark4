@@ -71,27 +71,40 @@ class _ResultSingleState extends State<ResultSingle> {
   }
 
   dynamic _lookup(String key) {
-    final data = widget.analysisResult;
-    if (data == null) return null;
+    return _lookupDeep(widget.analysisResult, key);
+  }
 
-    dynamic findInMap(Map map) {
-      if (map.containsKey(key)) return map[key];
-      for (final nestedKey in ['summary', '_history_summary', 'result', 'analysis']) {
-        final nested = map[nestedKey];
-        if (nested is Map && nested.containsKey(key)) return nested[key];
+  dynamic _lookupDeep(dynamic node, String key) {
+    if (node == null) return null;
+
+    if (node is Map) {
+      if (node.containsKey(key)) {
+        final value = node[key];
+        if (value is! Map && value is! List) return value;
       }
-      return null;
+
+      for (final value in node.values) {
+        final found = _lookupDeep(value, key);
+        if (found != null) return found;
+      }
     }
 
-    return findInMap(data);
+    if (node is List) {
+      for (final value in node) {
+        final found = _lookupDeep(value, key);
+        if (found != null) return found;
+      }
+    }
+
+    return null;
   }
 
   String _readText(List<String> keys) {
     for (final key in keys) {
       final value = _lookup(key);
-      if (value != null && value.toString().trim().isNotEmpty) {
-        return value.toString();
-      }
+      if (value == null || value is Map || value is List) continue;
+      final text = value.toString().trim();
+      if (text.isNotEmpty) return text;
     }
     return '-';
   }
@@ -131,7 +144,10 @@ class _ResultSingleState extends State<ResultSingle> {
         iconTheme: const IconThemeData(color: Colors.black),
         title: const Text(
           'Test Result',
-          style: TextStyle(color: Color(0xFF1A2A4A), fontWeight: FontWeight.w800),
+          style: TextStyle(
+            color: Color(0xFF1A2A4A),
+            fontWeight: FontWeight.w800,
+          ),
         ),
       ),
       backgroundColor: const Color(0xFFEFF3F8),
@@ -275,7 +291,10 @@ class _ResultSingleState extends State<ResultSingle> {
         _metricTile('T SNR', tSnr?.toStringAsFixed(2) ?? '-'),
         _metricTile('C SNR', cSnr?.toStringAsFixed(2) ?? '-'),
         _metricTile('T/C Ratio', ratio?.toStringAsFixed(3) ?? '-'),
-        _metricTile('Duration', duration == null ? '-' : '${duration.toInt()} ms'),
+        _metricTile(
+          'Duration',
+          duration == null ? '-' : '${duration.toInt()} ms',
+        ),
       ],
     );
   }
@@ -378,7 +397,11 @@ class _ResultSingleState extends State<ResultSingle> {
       decoration: const BoxDecoration(
         color: Colors.white,
         boxShadow: [
-          BoxShadow(blurRadius: 8, color: Colors.black12, offset: Offset(0, -2)),
+          BoxShadow(
+            blurRadius: 8,
+            color: Colors.black12,
+            offset: Offset(0, -2),
+          ),
         ],
       ),
       child: Row(
@@ -395,7 +418,8 @@ class _ResultSingleState extends State<ResultSingle> {
             child: _actionButton(
               text: 'Completed',
               color: const Color(0xFF227BFF),
-              onTap: () => Navigator.popUntil(context, (route) => route.isFirst),
+              onTap:
+                  () => Navigator.popUntil(context, (route) => route.isFirst),
             ),
           ),
         ],
