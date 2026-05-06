@@ -308,7 +308,7 @@ class _ResultSingleState extends State<ResultSingle> {
         child: Image.file(
           File(widget.imagePath),
           fit: BoxFit.cover,
-          // width: double.infinity,
+          width: double.infinity,
           height: 1200,
           errorBuilder: (context, error, stackTrace) {
             return const Padding(
