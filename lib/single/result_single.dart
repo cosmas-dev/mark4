@@ -307,9 +307,9 @@ class _ResultSingleState extends State<ResultSingle> {
         borderRadius: BorderRadius.circular(16),
         child: Image.file(
           File(widget.imagePath),
-          fit: BoxFit.contain,
+          fit: BoxFit.cover,
           // width: double.infinity,
-          height: 360,
+          height: 1200,
           errorBuilder: (context, error, stackTrace) {
             return const Padding(
               padding: EdgeInsets.all(32),
