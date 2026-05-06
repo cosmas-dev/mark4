@@ -985,7 +985,7 @@ class _ResultSingleState extends State<ResultSingle> {
                   ),
                   child: CenterCroppedFileImage(
                     imagePath: widget.imagePath,
-                    cropWidthRatio: 0.10,
+                    cropWidthRatio: 0.08,
                     cropHeightRatio: 0.30,
                     cropCenterYRatio: 0.55,
                   ),
@@ -1007,7 +1007,7 @@ class _ResultSingleState extends State<ResultSingle> {
                             // 위치가 조금 안 맞으면 아래 4개 값만 조절하면 됨.
                             srcLeftRatio: 0.12,
                             srcTopRatio: 0.10,
-                            srcWidthRatio: 0.22,
+                            srcWidthRatio: 0.24,
                             srcHeightRatio: 0.42,
                           )
                           : const ColoredBox(
