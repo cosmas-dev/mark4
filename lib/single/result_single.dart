@@ -519,6 +519,63 @@ class _ResultSingleState extends State<ResultSingle> {
   }
 }
 
+// ======================= BOTTOM BUTTONS =======================
+Widget _bottomButtons(BuildContext context) {
+  return SizedBox(
+    height: 200,
+    child: Row(
+      children: [
+        Expanded(
+          child: InkWell(
+            onTap: () => Navigator.popUntil(context, (route) => route.isFirst),
+            child: Container(
+              color: const Color(0xFF227BFF),
+              child: const Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.play_arrow, color: Colors.white, size: 60),
+                    SizedBox(height: 4),
+                    Text(
+                      "Back",
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 50,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+        Expanded(
+          child: Container(
+            decoration: const BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [Color(0xFF7D7D7D), Color(0xFF555555)],
+              ),
+            ),
+            child: const Center(
+              child: Text(
+                "Completed",
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 45,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+          ),
+        ),
+      ],
+    ),
+  );
+}
+
 class CenterCroppedFileImage extends StatefulWidget {
   final String imagePath;
   final double cropWidthRatio;
