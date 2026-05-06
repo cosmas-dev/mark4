@@ -435,7 +435,7 @@ class _ResultSingleState extends State<ResultSingle> {
       child: Row(
         children: [
           SizedBox(
-            width: 130,
+            width: 300,
             child: Text(
               label,
               style: const TextStyle(color: Color(0xFF6B6B6B), fontSize: 33),
@@ -533,20 +533,13 @@ class _ResultSingleState extends State<ResultSingle> {
               child: Container(
                 color: const Color(0xFF227BFF),
                 child: const Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(Icons.play_arrow, color: Colors.white, size: 60),
-                      SizedBox(height: 4),
-                      Text(
-                        "Back",
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 50,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ],
+                  child: Text(
+                    "Back",
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 45,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                 ),
               ),
