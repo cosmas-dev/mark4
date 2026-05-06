@@ -63,9 +63,12 @@ class _ResultSingleState extends State<ResultSingle> {
 
   String _buildResultString() {
     final grade = _readText(['grade', 'verdict', 'result']);
-    final ratio = _readNumber(['t_c_ratio', 'tc_ratio', 'ct_ratio']);
+    final status = _readText(['status', 'state']);
+
     if (grade != '-') {
-      return ratio == null ? grade : '$grade / T/C ${ratio.toStringAsFixed(3)}';
+      return status == '-'
+          ? grade.toUpperCase()
+          : '${grade.toUpperCase()} / ${status.toUpperCase()}';
     }
     return 'Analysis Pending';
   }
@@ -109,16 +112,23 @@ class _ResultSingleState extends State<ResultSingle> {
     return '-';
   }
 
-  num? _readNumber(List<String> keys) {
+  bool? _readBool(List<String> keys) {
     for (final key in keys) {
       final value = _lookup(key);
-      if (value is num) return value;
+      if (value is bool) return value;
+      if (value is num) return value != 0;
       if (value is String) {
-        final parsed = num.tryParse(value);
-        if (parsed != null) return parsed;
+        final normalized = value.trim().toLowerCase();
+        if (['true', 'yes', 'y', '1'].contains(normalized)) return true;
+        if (['false', 'no', 'n', '0'].contains(normalized)) return false;
       }
     }
     return null;
+  }
+
+  String _formatBool(bool? value) {
+    if (value == null) return '-';
+    return value ? 'YES' : 'NO';
   }
 
   Color _gradeColor(String grade) {
@@ -164,8 +174,6 @@ class _ResultSingleState extends State<ResultSingle> {
                     const SizedBox(height: 16),
                     _capturedImage(),
                     const SizedBox(height: 16),
-                    _metricsGrid(),
-                    const SizedBox(height: 16),
                     _patientCard(),
                   ],
                 ),
@@ -181,6 +189,16 @@ class _ResultSingleState extends State<ResultSingle> {
   Widget _summaryCard(String grade, String status, String reason) {
     final color = _gradeColor(grade == '-' ? status : grade);
     final hasAnalysis = widget.analysisResult != null;
+    final retestRecommended = _readBool([
+      'retest_recommended',
+      'retestRecommended',
+      'retest',
+    ]);
+    final typeMismatchWarning = _readBool([
+      'type_mismatch_warning',
+      'typeMismatchWarning',
+      'type_warning',
+    ]);
 
     return Container(
       padding: const EdgeInsets.all(22),
@@ -226,18 +244,46 @@ class _ResultSingleState extends State<ResultSingle> {
               letterSpacing: -1.0,
             ),
           ),
-          const SizedBox(height: 8),
-          Text(
-            'Status: $status',
-            style: const TextStyle(fontSize: 17, color: Color(0xFF1A2A4A)),
+          const SizedBox(height: 14),
+          _resultLine('Status', status == '-' ? '-' : status.toUpperCase()),
+          _resultLine('Retest Recommended', _formatBool(retestRecommended)),
+          _resultLine(
+            'Type Mismatch Warning',
+            _formatBool(typeMismatchWarning),
           ),
-          if (reason != '-') ...[
-            const SizedBox(height: 6),
-            Text(
-              'Reason: $reason',
-              style: const TextStyle(fontSize: 16, color: Color(0xFF6B6B6B)),
+          if (reason != '-') _resultLine('Reason', reason),
+        ],
+      ),
+    );
+  }
+
+  Widget _resultLine(String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.only(top: 6),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SizedBox(
+            width: 190,
+            child: Text(
+              label,
+              style: const TextStyle(
+                fontSize: 16,
+                color: Color(0xFF6B6B6B),
+                fontWeight: FontWeight.w600,
+              ),
             ),
-          ],
+          ),
+          Expanded(
+            child: Text(
+              value,
+              style: const TextStyle(
+                fontSize: 17,
+                color: Color(0xFF1A2A4A),
+                fontWeight: FontWeight.w800,
+              ),
+            ),
+          ),
         ],
       ),
     );
@@ -274,65 +320,6 @@ class _ResultSingleState extends State<ResultSingle> {
     );
   }
 
-  Widget _metricsGrid() {
-    final tSnr = _readNumber(['t_snr']);
-    final cSnr = _readNumber(['c_snr']);
-    final ratio = _readNumber(['t_c_ratio', 'tc_ratio', 'ct_ratio']);
-    final duration = _readNumber(['duration_ms']);
-
-    return GridView.count(
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      crossAxisCount: 2,
-      childAspectRatio: 2.5,
-      mainAxisSpacing: 12,
-      crossAxisSpacing: 12,
-      children: [
-        _metricTile('T SNR', tSnr?.toStringAsFixed(2) ?? '-'),
-        _metricTile('C SNR', cSnr?.toStringAsFixed(2) ?? '-'),
-        _metricTile('T/C Ratio', ratio?.toStringAsFixed(3) ?? '-'),
-        _metricTile(
-          'Duration',
-          duration == null ? '-' : '${duration.toInt()} ms',
-        ),
-      ],
-    );
-  }
-
-  Widget _metricTile(String label, String value) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: const Color(0xFFDDE5F2)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Text(
-            label,
-            style: const TextStyle(
-              color: Color(0xFF6B6B6B),
-              fontSize: 14,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            value,
-            style: const TextStyle(
-              color: Color(0xFF1A2A4A),
-              fontSize: 24,
-              fontWeight: FontWeight.w900,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
   Widget _patientCard() {
     return Container(
       padding: const EdgeInsets.all(20),
@@ -356,9 +343,7 @@ class _ResultSingleState extends State<ResultSingle> {
           _infoRow('Age / Gender', '${widget.age} / ${widget.gender}'),
           _infoRow('Item', widget.selectedItem),
           _infoRow('Sample Type', widget.sampleType),
-          _infoRow('Shutter', widget.shutterSpeed),
-          _infoRow('Kit ID', _readText(['kit_id'])),
-          _infoRow('History ID', _readText(['id', 'history_id'])),
+          _infoRow('Test Time', DateTime.now().toString().split('.').first),
         ],
       ),
     );
