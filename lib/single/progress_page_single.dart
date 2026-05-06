@@ -5,7 +5,7 @@ import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:mark4/components/time_set.dart';
-import 'package:mark4/single/result_single.dart';
+import 'package:mark4/single/result_single1.dart';
 import 'package:path_provider/path_provider.dart';
 
 class ProgressPageSingle extends StatefulWidget {
@@ -55,9 +55,10 @@ class _ProgressPageSingleState extends State<ProgressPageSingle>
       duration: const Duration(seconds: 7),
     );
 
-    progress = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(parent: controller, curve: Curves.easeInOut),
-    );
+    progress = Tween<double>(
+      begin: 0.0,
+      end: 1.0,
+    ).animate(CurvedAnimation(parent: controller, curve: Curves.easeInOut));
 
     controller.forward();
 
@@ -272,11 +273,7 @@ class _ProgressPageSingleState extends State<ProgressPageSingle>
       // ANALYSIS_DONE이 늦거나 분석 auto_run이 꺼진 환경을 위한 fallback.
       _fallbackTimer ??= Timer(const Duration(seconds: 5), () async {
         if (_hasNavigated || _analysisResult != null) return;
-        await _sendCommand(
-          header: 'E001',
-          cmd: 'ANALYSIS_GET_LAST',
-          data: '',
-        );
+        await _sendCommand(header: 'E001', cmd: 'ANALYSIS_GET_LAST', data: '');
         Timer(const Duration(seconds: 2), () => _navigateIfReady(force: true));
       });
     }
@@ -330,17 +327,18 @@ class _ProgressPageSingleState extends State<ProgressPageSingle>
     Navigator.pushReplacement(
       context,
       MaterialPageRoute(
-        builder: (context) => ResultSingle(
-          shutterSpeed: widget.shutterSpeed,
-          userName: widget.userName,
-          gender: widget.gender,
-          sampleType: widget.sampleType,
-          selectedItem: widget.selectedItem,
-          age: widget.age,
-          imagePath: _imagePath!,
-          ip: widget.ip,
-          analysisResult: _analysisResult,
-        ),
+        builder:
+            (context) => ResultSingle(
+              shutterSpeed: widget.shutterSpeed,
+              userName: widget.userName,
+              gender: widget.gender,
+              sampleType: widget.sampleType,
+              selectedItem: widget.selectedItem,
+              age: widget.age,
+              imagePath: _imagePath!,
+              ip: widget.ip,
+              analysisResult: _analysisResult,
+            ),
       ),
     );
   }
@@ -356,19 +354,21 @@ class RingPainter extends CustomPainter {
     final strokeWidth = 18.0;
     final rect = Offset.zero & size;
 
-    final bgPaint = Paint()
-      ..color = const Color(0xFFE4EAF4)
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = strokeWidth
-      ..strokeCap = StrokeCap.round;
+    final bgPaint =
+        Paint()
+          ..color = const Color(0xFFE4EAF4)
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = strokeWidth
+          ..strokeCap = StrokeCap.round;
 
-    final progressPaint = Paint()
-      ..shader = const SweepGradient(
-        colors: [Color(0xFF3C66F4), Color(0xFF3C66F4)],
-      ).createShader(rect)
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = strokeWidth
-      ..strokeCap = StrokeCap.round;
+    final progressPaint =
+        Paint()
+          ..shader = const SweepGradient(
+            colors: [Color(0xFF3C66F4), Color(0xFF3C66F4)],
+          ).createShader(rect)
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = strokeWidth
+          ..strokeCap = StrokeCap.round;
 
     final center = Offset(size.width / 2, size.height / 2);
     final radius = (size.width - strokeWidth) / 2;

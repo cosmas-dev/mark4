@@ -41,6 +41,61 @@ class _ResultSingleState extends State<ResultSingle> {
   void initState() {
     super.initState();
     _saveResultOnce();
+    _debugPrintResultData();
+  }
+
+  void _debugPrintResultData() {
+    debugPrint('========== RESULT SCREEN DATA ==========');
+
+    debugPrint('userName: ${widget.userName}');
+
+    debugPrint('age: ${widget.age}');
+
+    debugPrint('gender: ${widget.gender}');
+
+    debugPrint('sampleType: ${widget.sampleType}');
+
+    debugPrint('selectedItem: ${widget.selectedItem}');
+
+    debugPrint('imagePath: ${widget.imagePath}');
+
+    debugPrint('shutterSpeed: ${widget.shutterSpeed}');
+
+    debugPrint('ip: ${widget.ip}');
+
+    debugPrint('---------- RAW analysisResult ----------');
+
+    if (widget.analysisResult == null) {
+      debugPrint('analysisResult: null');
+    } else {
+      try {
+        const encoder = JsonEncoder.withIndent('  ');
+
+        debugPrint(encoder.convert(widget.analysisResult));
+      } catch (e) {
+        debugPrint('analysisResult print failed: $e');
+
+        debugPrint(widget.analysisResult.toString());
+      }
+    }
+
+    debugPrint('---------- Parsed Values ----------');
+
+    debugPrint('grade: ${_readText(['grade', 'verdict', 'result'])}');
+
+    debugPrint('status: ${_readText(['status', 'state'])}');
+
+    debugPrint('reason: ${_readText(['reason', 'error'])}');
+
+    debugPrint(
+      'retest_recommended: ${_readBool(['retest_recommended', 'retestRecommended', 'retest'])}',
+    );
+
+    debugPrint(
+      'type_mismatch_warning: ${_readBool(['type_mismatch_warning', 'typeMismatchWarning', 'type_warning'])}',
+    );
+
+    debugPrint('========================================');
   }
 
   Future<void> _saveResultOnce() async {
