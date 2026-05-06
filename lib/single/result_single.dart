@@ -309,7 +309,7 @@ class _ResultSingleState extends State<ResultSingle> {
           File(widget.imagePath),
           fit: BoxFit.cover,
           width: double.infinity,
-          height: 1200,
+          scale: 3,
           errorBuilder: (context, error, stackTrace) {
             return const Padding(
               padding: EdgeInsets.all(32),
