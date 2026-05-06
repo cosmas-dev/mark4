@@ -1157,9 +1157,9 @@ class CenterCroppedFileImage extends StatefulWidget {
   const CenterCroppedFileImage({
     super.key,
     required this.imagePath,
-    this.cropWidthRatio = 0.10,
+    this.cropWidthRatio = 0.5,
     this.cropHeightRatio = 0.36,
-    this.cropCenterYRatio = 0.55,
+    this.cropCenterYRatio = 0.7,
   });
 
   @override
@@ -1335,10 +1335,10 @@ class AnalysisPlotRoiCropImage extends StatefulWidget {
   const AnalysisPlotRoiCropImage({
     super.key,
     required this.imagePath,
-    this.srcLeftRatio = 0.14,
-    this.srcTopRatio = 0.12,
+    this.srcLeftRatio = 0.1,
+    this.srcTopRatio = 0.1,
     this.srcWidthRatio = 0.20,
-    this.srcHeightRatio = 0.38,
+    this.srcHeightRatio = 0.50,
   });
 
   @override
