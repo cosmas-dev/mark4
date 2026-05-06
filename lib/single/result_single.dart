@@ -1,4 +1,6 @@
+import 'dart:async';
 import 'dart:io';
+import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
 import 'package:mark4/DB/run_test_json_store.dart';
@@ -290,6 +292,8 @@ class _ResultSingleState extends State<ResultSingle> {
   }
 
   Widget _capturedImage() {
+    const imageHeight = 360.0;
+
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
@@ -305,18 +309,16 @@ class _ResultSingleState extends State<ResultSingle> {
       ),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(16),
-        child: Image.file(
-          File(widget.imagePath),
-          fit: BoxFit.cover,
+        child: SizedBox(
           width: double.infinity,
-          scale: 3,
-          height: 360,
-          errorBuilder: (context, error, stackTrace) {
-            return const Padding(
-              padding: EdgeInsets.all(32),
-              child: Center(child: Text('이미지를 불러올 수 없습니다.')),
-            );
-          },
+          height: imageHeight,
+          child: CenterCroppedFileImage(
+            imagePath: widget.imagePath,
+            // MARK-4 촬영 이미지에서 중앙 테스트 라인 영역만 실제 픽셀 기준으로 잘라서 확대 표시한다.
+            // 값이 작을수록 더 많이 확대된다. 중앙 빨간 라인이 작게 보이면 0.10 / 0.30 쪽으로 줄이면 된다.
+            cropWidthRatio: 0.12,
+            cropHeightRatio: 0.36,
+          ),
         ),
       ),
     );
@@ -439,5 +441,147 @@ class _ResultSingleState extends State<ResultSingle> {
         ),
       ),
     );
+  }
+}
+
+class CenterCroppedFileImage extends StatefulWidget {
+  final String imagePath;
+  final double cropWidthRatio;
+  final double cropHeightRatio;
+
+  const CenterCroppedFileImage({
+    super.key,
+    required this.imagePath,
+    this.cropWidthRatio = 0.12,
+    this.cropHeightRatio = 0.36,
+  });
+
+  @override
+  State<CenterCroppedFileImage> createState() => _CenterCroppedFileImageState();
+}
+
+class _CenterCroppedFileImageState extends State<CenterCroppedFileImage> {
+  ui.Image? _image;
+  Object? _error;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadImage();
+  }
+
+  @override
+  void didUpdateWidget(covariant CenterCroppedFileImage oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.imagePath != widget.imagePath) {
+      _image?.dispose();
+      _image = null;
+      _error = null;
+      _loadImage();
+    }
+  }
+
+  Future<void> _loadImage() async {
+    try {
+      final bytes = await File(widget.imagePath).readAsBytes();
+      final codec = await ui.instantiateImageCodec(bytes);
+      final frame = await codec.getNextFrame();
+      if (!mounted) {
+        frame.image.dispose();
+        return;
+      }
+      setState(() {
+        _image = frame.image;
+      });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _error = e;
+      });
+    }
+  }
+
+  @override
+  void dispose() {
+    _image?.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (_error != null) {
+      return const ColoredBox(
+        color: Colors.black,
+        child: Center(
+          child: Text(
+            '이미지를 불러올 수 없습니다.',
+            style: TextStyle(color: Colors.white),
+          ),
+        ),
+      );
+    }
+
+    if (_image == null) {
+      return const ColoredBox(
+        color: Colors.black,
+        child: Center(child: CircularProgressIndicator()),
+      );
+    }
+
+    return CustomPaint(
+      size: Size.infinite,
+      painter: _CenterCropPainter(
+        image: _image!,
+        cropWidthRatio: widget.cropWidthRatio,
+        cropHeightRatio: widget.cropHeightRatio,
+      ),
+    );
+  }
+}
+
+class _CenterCropPainter extends CustomPainter {
+  final ui.Image image;
+  final double cropWidthRatio;
+  final double cropHeightRatio;
+
+  _CenterCropPainter({
+    required this.image,
+    required this.cropWidthRatio,
+    required this.cropHeightRatio,
+  });
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final imageWidth = image.width.toDouble();
+    final imageHeight = image.height.toDouble();
+
+    final cropWidth = (imageWidth * cropWidthRatio).clamp(1.0, imageWidth);
+    final cropHeight = (imageHeight * cropHeightRatio).clamp(1.0, imageHeight);
+    final left = ((imageWidth - cropWidth) / 2).clamp(
+      0.0,
+      imageWidth - cropWidth,
+    );
+    final top = ((imageHeight - cropHeight) / 2).clamp(
+      0.0,
+      imageHeight - cropHeight,
+    );
+
+    final src = Rect.fromLTWH(left, top, cropWidth, cropHeight);
+    final dst = Rect.fromLTWH(0, 0, size.width, size.height);
+
+    canvas.drawRect(dst, Paint()..color = Colors.black);
+    canvas.drawImageRect(
+      image,
+      src,
+      dst,
+      Paint()..filterQuality = FilterQuality.high,
+    );
+  }
+
+  @override
+  bool shouldRepaint(covariant _CenterCropPainter oldDelegate) {
+    return oldDelegate.image != image ||
+        oldDelegate.cropWidthRatio != cropWidthRatio ||
+        oldDelegate.cropHeightRatio != cropHeightRatio;
   }
 }
