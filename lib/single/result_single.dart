@@ -829,6 +829,8 @@ class _ResultSingleState extends State<ResultSingle> {
                     const SizedBox(height: 16),
                     _capturedImage(),
                     const SizedBox(height: 16),
+                    _analysisPlotRoiImage(),
+                    const SizedBox(height: 16),
                     _patientCard(),
                   ],
                 ),
@@ -949,12 +951,8 @@ class _ResultSingleState extends State<ResultSingle> {
   Widget _capturedImage() {
     const imageHeight = 360.0;
 
-    final plotPath = widget.analysisPlotPath;
-    final hasAnalysisPlot =
-        plotPath != null && plotPath.isNotEmpty && File(plotPath).existsSync();
-
     return Container(
-      padding: EdgeInsets.zero,
+      padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(22),
@@ -967,25 +965,73 @@ class _ResultSingleState extends State<ResultSingle> {
         ],
       ),
       child: ClipRRect(
-        borderRadius: BorderRadius.circular(22),
+        borderRadius: BorderRadius.circular(16),
         child: SizedBox(
           width: double.infinity,
           height: imageHeight,
-          child:
-              hasAnalysisPlot
-                  ? AnalysisPlotRoiCropImage(
-                    imagePath: plotPath,
-                    srcLeftRatio: 0.20,
-                    srcTopRatio: 0.17,
-                    srcWidthRatio: 0.24,
-                    srcHeightRatio: 0.42,
-                  )
-                  : CenterCroppedFileImage(
-                    imagePath: widget.imagePath,
-                    cropWidthRatio: 0.18,
-                    cropHeightRatio: 0.36,
-                  ),
+          child: CenterCroppedFileImage(
+            imagePath: widget.imagePath,
+            cropWidthRatio: 0.18,
+            cropHeightRatio: 0.36,
+            cropCenterYRatio: 0.50,
+          ),
         ),
+      ),
+    );
+  }
+
+  Widget _analysisPlotRoiImage() {
+    final path = widget.analysisPlotPath;
+    final hasImage = path != null && path.isNotEmpty && File(path).existsSync();
+
+    if (!hasImage) {
+      return const SizedBox.shrink();
+    }
+
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(22),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withAlpha(12),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Padding(
+            padding: EdgeInsets.fromLTRB(6, 4, 6, 10),
+            child: Text(
+              'Analysis Image',
+              style: TextStyle(
+                color: Color(0xFF1A2A4A),
+                fontSize: 20,
+                fontWeight: FontWeight.w800,
+              ),
+            ),
+          ),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(16),
+            child: SizedBox(
+              width: double.infinity,
+              height: 360,
+              child: AnalysisPlotRoiCropImage(
+                imagePath: path,
+
+                // Analysis Plot PNG의 왼쪽 위 ROI heatmap만 crop
+                srcLeftRatio: 0.18,
+                srcTopRatio: 0.20,
+                srcWidthRatio: 0.16,
+                srcHeightRatio: 0.34,
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
