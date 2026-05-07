@@ -111,41 +111,40 @@ class _PreparingPageSingleState extends State<PreparingPageSingle> {
                     ],
                   ),
                   child: // ---------- 슬라이드 카드 영역 ----------
-                      Center(
-                    child: SizedBox(
-                      height: 900,
-                      child: Column(
-                        children: [
-                          // -------- PageView --------
-                          Expanded(
-                            child: PageView(
-                              controller: pageController,
-                              onPageChanged: (i) {
-                                setState(() => currentPage = i);
-                              },
-                              children: [
-                                _imageGridPage1(),
-                                _imageGridPage2(),
-                                _imageGridPage3(),
-                              ],
-                            ),
-                          ),
-
-                          const SizedBox(height: 12),
-
-                          // -------- Indicator --------
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
+                      SizedBox(
+                    height: 900,
+                    child: Column(
+                      children: [
+                        const SizedBox(height: 20),
+                        // -------- PageView --------
+                        Expanded(
+                          child: PageView(
+                            controller: pageController,
+                            onPageChanged: (i) {
+                              setState(() => currentPage = i);
+                            },
                             children: [
-                              _dot(active: currentPage == 0),
-                              const SizedBox(width: 8),
-                              _dot(active: currentPage == 1),
-                              const SizedBox(width: 8),
-                              _dot(active: currentPage == 2),
+                              _imageGridPage1(),
+                              _imageGridPage2(),
+                              _imageGridPage3(),
                             ],
                           ),
-                        ],
-                      ),
+                        ),
+
+                        const SizedBox(height: 12),
+
+                        // -------- Indicator --------
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            _dot(active: currentPage == 0),
+                            const SizedBox(width: 8),
+                            _dot(active: currentPage == 1),
+                            const SizedBox(width: 8),
+                            _dot(active: currentPage == 2),
+                          ],
+                        ),
+                      ],
                     ),
                   ),
                 ),
