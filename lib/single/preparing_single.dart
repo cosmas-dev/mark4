@@ -91,6 +91,7 @@ class _PreparingPageSingleState extends State<PreparingPageSingle> {
             mainAxisAlignment: MainAxisAlignment.center,
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
+              const SizedBox(height: 20),
               Center(
                 child: Container(
                   width: MediaQuery.sizeOf(context).width * 0.9,
@@ -115,7 +116,6 @@ class _PreparingPageSingleState extends State<PreparingPageSingle> {
                     height: 900,
                     child: Column(
                       children: [
-                        const SizedBox(height: 20),
                         // -------- PageView --------
                         Expanded(
                           child: PageView(
