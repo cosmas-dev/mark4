@@ -394,6 +394,7 @@ import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
+import 'package:mark4/DB/run_test_json_store.dart';
 import 'package:mark4/components/time_set.dart';
 import 'package:mark4/single/result_single.dart';
 import 'package:path_provider/path_provider.dart';
@@ -441,6 +442,9 @@ class _ProgressPageSingleState extends State<ProgressPageSingle>
   bool _isSavingImage = false;
   bool _hasNavigated = false;
   Timer? _fallbackTimer;
+
+  final store = RunTestJsonStore();
+  bool _savedResult = false;
 
   @override
   void initState() {
@@ -657,6 +661,9 @@ class _ProgressPageSingleState extends State<ProgressPageSingle>
 
     if (header == 'ANALYSIS_DONE') {
       _analysisResult = _normalizeAnalysisData(data);
+      if (_runCompleted) {
+        _requestAnalysisPlot();
+      }
       _navigateIfReady();
       return;
     }
@@ -669,11 +676,11 @@ class _ProgressPageSingleState extends State<ProgressPageSingle>
 
     if (header == 'A001' && cmd == 'RUN') {
       _runCompleted = true;
-      // RUN 완료 후 분석 시각화 PNG(frame_analysis.png)를 추가로 요청한다.
-      // TIFF/NPY는 Flutter 결과 화면용 이미지가 아니라 분석 데이터이므로 받지 않는다.
-      _requestAnalysisPlot();
 
-      // ANALYSIS_DONE이 늦거나 분석 auto_run이 꺼진 환경을 위한 fallback.
+      if (data.toString().contains('Capture Complete')) {
+        _requestAnalysisPlot();
+      }
+
       _fallbackTimer ??= Timer(const Duration(seconds: 5), () async {
         if (_hasNavigated || _analysisResult != null) return;
         await _sendCommand(header: 'E001', cmd: 'ANALYSIS_GET_LAST', data: '');
@@ -761,14 +768,25 @@ class _ProgressPageSingleState extends State<ProgressPageSingle>
     });
   }
 
-  void _navigateIfReady({bool force = false}) {
+  Future<void> _navigateIfReady({bool force = false}) async {
     if (!mounted || _hasNavigated || _imagePath == null) return;
     if (!_runCompleted) return;
-    if (!force && _analysisResult == null) return;
-    if (force && !_analysisPlotFinished && _requestedAnalysisPlot) return;
+    if (_analysisResult == null) return;
+
+    if (!_requestedAnalysisPlot) {
+      _requestAnalysisPlot();
+      return;
+    }
+
+    if (!_analysisPlotFinished) return;
 
     _hasNavigated = true;
     _fallbackTimer?.cancel();
+    _analysisPlotTimeoutTimer?.cancel();
+
+    await _saveResultOnce();
+
+    if (!mounted) return;
 
     Navigator.pushReplacement(
       context,
@@ -788,6 +806,57 @@ class _ProgressPageSingleState extends State<ProgressPageSingle>
             ),
       ),
     );
+  }
+
+  Future<void> _saveResultOnce() async {
+    if (_savedResult || _imagePath == null) return;
+    _savedResult = true;
+
+    try {
+      await store.save(
+        shutterSpeed: widget.shutterSpeed,
+        name: widget.userName,
+        age: widget.age,
+        gender: widget.gender,
+        item: widget.selectedItem,
+        sampleType: widget.sampleType,
+        imagePath: _imagePath!,
+        analysisPlotPath: _analysisPlotPath,
+        analysisResult: _analysisResult,
+        result: _buildResultString(),
+      );
+    } catch (e) {
+      debugPrint('결과 저장 실패: $e');
+    }
+  }
+
+  String _buildResultString() {
+    final c = _readDetected(['control', 'detected']);
+    final t = _readDetected(['test', 'detected']);
+    return 'C: $c / T: $t';
+  }
+
+  dynamic _lookupPath(List<String> path) {
+    dynamic node = _analysisResult;
+
+    for (final key in path) {
+      if (node is Map && node.containsKey(key)) {
+        node = node[key];
+      } else {
+        return null;
+      }
+    }
+
+    return node;
+  }
+
+  String _readDetected(List<String> path) {
+    final value = _lookupPath(path);
+
+    if (value == true) return 'Detected';
+    if (value == false) return 'Not Detected';
+
+    return '-';
   }
 }
 

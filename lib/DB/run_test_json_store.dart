@@ -126,28 +126,31 @@ class RunTestJsonStore {
     required String item,
     required String sampleType,
     required String imagePath,
+    String? analysisPlotPath,
+    Map<String, dynamic>? analysisResult,
     required String result,
   }) async {
-    final list = await readAll();
+    final rows = await readAll();
 
-    // 원본 경로가 임시 경로일 수 있으니 앱 내부로 복사
-    final savedImagePath = await _saveImagePermanently(imagePath, shutterSpeed);
-
-    list.add({
-      'id': const Uuid().v4(),
+    rows.add({
+      'id': DateTime.now().millisecondsSinceEpoch.toString(),
+      'createdAt': DateTime.now().toIso8601String(),
+      'shutterSpeed': shutterSpeed,
       'userName': name,
       'age': age,
       'gender': gender,
       'item': item,
       'sampleType': sampleType,
-      'imagePath': savedImagePath,
+      'imagePath': imagePath,
+      'analysisPlotPath': analysisPlotPath,
+      'analysisResult': analysisResult,
       'result': result,
-      'createdAt': DateTime.now().toIso8601String(),
-      'synced': false,
     });
 
+    // await _writeAll(rows);
+
     final file = await _file();
-    await file.writeAsString(jsonEncode(list), flush: true);
+    await file.writeAsString(jsonEncode(rows), flush: true);
   }
 
   Future<void> deleteByIds(List<String> ids) async {

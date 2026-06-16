@@ -4,9 +4,11 @@ import 'package:flutter/material.dart';
 import 'package:mark4/DB/run_test_json_store.dart';
 import 'package:mark4/DB/run_test_row.dart';
 import 'package:mark4/components/current_time.dart';
+import 'package:mark4/single/result_single.dart';
 
 class RunTestListPage extends StatefulWidget {
-  const RunTestListPage({super.key});
+  final String ip;
+  const RunTestListPage({super.key, required this.ip});
 
   @override
   State<RunTestListPage> createState() => _RunTestListPageState();
@@ -195,34 +197,64 @@ class _RunTestListPageState extends State<RunTestListPage> {
   }
 
   Widget _row(RunTestRow row) {
-    return Container(
-      height: 58,
-      color: row.selected ? const Color(0xFFDFF5F3) : Colors.white,
-      child: Row(
-        children: [
-          SizedBox(
-            width: 44,
-            child: Center(
-              child: Checkbox(
-                value: row.selected,
-                onChanged: (v) {
-                  setState(() {
-                    for (final r in rows) {
-                      if (r.id == row.id) {
-                        r.selected = v!;
+    return InkWell(
+      onTap: () async {
+        final raw = await store.readAll();
+        final data = raw.firstWhere((e) => e['id'] == row.id, orElse: () => {});
+
+        if (data.isEmpty) return;
+
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder:
+                (_) => ResultSingle(
+                  shutterSpeed: data['shutterSpeed'] ?? '',
+                  userName: data['userName'] ?? '',
+                  gender: data['gender'] ?? '',
+                  sampleType: data['sampleType'] ?? '',
+                  selectedItem: data['item'] ?? '',
+                  age: data['age'] ?? '',
+                  imagePath: data['imagePath'] ?? '',
+                  analysisPlotPath: data['analysisPlotPath'],
+                  analysisResult:
+                      data['analysisResult'] is Map
+                          ? Map<String, dynamic>.from(data['analysisResult'])
+                          : null,
+                  ip: '',
+                ),
+          ),
+        );
+      },
+      child: Container(
+        height: 58,
+        color: row.selected ? const Color(0xFFDFF5F3) : Colors.white,
+        child: Row(
+          children: [
+            SizedBox(
+              width: 44,
+              child: Center(
+                child: Checkbox(
+                  value: row.selected,
+                  onChanged: (v) {
+                    setState(() {
+                      for (final r in rows) {
+                        if (r.id == row.id) {
+                          r.selected = v!;
+                        }
                       }
-                    }
-                    headerChecked = pagedRows.every((r) => r.selected);
-                  });
-                },
+                      headerChecked = pagedRows.every((r) => r.selected);
+                    });
+                  },
+                ),
               ),
             ),
-          ),
-          _Cell(_formatDate(row.date)),
-          _Cell(row.userName),
-          _Cell(row.item),
-          _Cell(row.result),
-        ],
+            _Cell(_formatDate(row.date)),
+            _Cell(row.userName),
+            _Cell(row.item),
+            _Cell(row.result),
+          ],
+        ),
       ),
     );
   }
@@ -389,6 +421,12 @@ class _RunTestListPageState extends State<RunTestListPage> {
 
   Future<void> _load() async {
     final raw = await store.readAll();
+    raw.sort(
+      (a, b) => DateTime.parse(
+        b['createdAt'],
+      ).compareTo(DateTime.parse(a['createdAt'])),
+    );
+
     rows = [];
 
     for (final e in raw) {
@@ -405,6 +443,7 @@ class _RunTestListPageState extends State<RunTestListPage> {
       );
     }
 
+    headerChecked = false;
     setState(() {});
   }
 
@@ -558,6 +597,8 @@ class _RunTestListPageState extends State<RunTestListPage> {
 
     final csv = buildCsv(selected);
     await file.writeAsString(csv, flush: true);
+
+    _clearSelection();
 
     _showSaveCompletedDialog();
   }
@@ -733,12 +774,29 @@ class _RunTestListPageState extends State<RunTestListPage> {
     );
   }
 
+  void _clearSelection() {
+    setState(() {
+      headerChecked = false;
+      for (final row in rows) {
+        row.selected = false;
+      }
+    });
+  }
+
   // ---------------- Actions ----------------
 
   Future<void> _deleteSelected() async {
     final ids = rows.where((r) => r.selected).map((r) => r.id).toSet().toList();
+
+    if (ids.isEmpty) {
+      _showSnack('No selected items to delete');
+      return;
+    }
+
     await store.deleteByIds(ids);
-    // 페이지 범위가 넘어가면 0으로
+
+    headerChecked = false; // 추가
+
     if (page > 0 && (rows.length - ids.length) <= page * pageSize) page = 0;
     await _load();
   }
@@ -785,7 +843,7 @@ class _Cell extends StatelessWidget {
         text,
         textAlign: TextAlign.center,
         style: const TextStyle(
-          fontSize: 13,
+          fontSize: 18,
           height: 1.2,
           color: Colors.black87,
         ),

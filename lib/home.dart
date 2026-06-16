@@ -471,7 +471,9 @@ class _HomeState extends State<Home> {
                                           context,
                                           MaterialPageRoute(
                                             builder:
-                                                (context) => RunTestListPage(),
+                                                (context) => RunTestListPage(
+                                                  ip: widget.ip,
+                                                ),
                                           ),
                                         );
                                       } else {
@@ -486,7 +488,9 @@ class _HomeState extends State<Home> {
                                           context,
                                           MaterialPageRoute(
                                             builder:
-                                                (context) => RunTestListPage(),
+                                                (context) => RunTestListPage(
+                                                  ip: widget.ip,
+                                                ),
                                           ),
                                         );
                                       }

@@ -37,141 +37,86 @@ class ResultSingle extends StatefulWidget {
 }
 
 class _ResultSingleState extends State<ResultSingle> {
-  final store = RunTestJsonStore();
-  bool _saved = false;
+  // final store = RunTestJsonStore();
+  // bool _saved = false;
 
-  @override
-  void initState() {
-    super.initState();
-    _saveResultOnce();
-  }
+  // @override
+  // void initState() {
+  //   super.initState();
+  //   _saveResultOnce();
+  // }
 
-  Future<void> _saveResultOnce() async {
-    if (_saved) return;
-    _saved = true;
+  // Future<void> _saveResultOnce() async {
+  //   if (_saved) return;
+  //   _saved = true;
 
-    try {
-      await store.save(
-        shutterSpeed: widget.shutterSpeed,
-        name: widget.userName,
-        age: widget.age,
-        gender: widget.gender,
-        item: widget.selectedItem,
-        sampleType: widget.sampleType,
-        imagePath: widget.imagePath,
-        result: _buildResultString(),
-      );
-    } catch (e) {
-      debugPrint('결과 저장 실패: $e');
-    }
-  }
+  //   try {
+  //     await store.save(
+  //       shutterSpeed: widget.shutterSpeed,
+  //       name: widget.userName,
+  //       age: widget.age,
+  //       gender: widget.gender,
+  //       item: widget.selectedItem,
+  //       sampleType: widget.sampleType,
+  //       imagePath: widget.imagePath,
+  //       analysisPlotPath: widget.analysisPlotPath,
+  //       analysisResult: widget.analysisResult,
+  //       result: _buildResultString(),
+  //     );
+  //   } catch (e) {
+  //     debugPrint('결과 저장 실패: $e');
+  //   }
+  // }
 
   String _buildResultString() {
-    final grade = _readText(['grade', 'verdict', 'result']);
-    final status = _readText(['status', 'state']);
-
-    if (grade != '-') {
-      return status == '-'
-          ? grade.toUpperCase()
-          : '${grade.toUpperCase()} / ${status.toUpperCase()}';
-    }
-
-    return 'Analysis Pending';
+    final c = _readDetected(['control', 'detected']);
+    final t = _readDetected(['test', 'detected']);
+    return 'C: $c / T: $t';
   }
 
-  dynamic _lookup(String key) {
-    return _lookupDeep(widget.analysisResult, key);
-  }
+  dynamic _lookupPath(List<String> path) {
+    dynamic node = widget.analysisResult;
 
-  dynamic _lookupDeep(dynamic node, String key) {
-    if (node == null) return null;
-
-    if (node is Map) {
-      if (node.containsKey(key)) {
-        final value = node[key];
-        if (value is! Map && value is! List) return value;
-      }
-
-      for (final value in node.values) {
-        final found = _lookupDeep(value, key);
-        if (found != null) return found;
+    for (final key in path) {
+      if (node is Map && node.containsKey(key)) {
+        node = node[key];
+      } else {
+        return null;
       }
     }
 
-    if (node is List) {
-      for (final value in node) {
-        final found = _lookupDeep(value, key);
-        if (found != null) return found;
-      }
-    }
-
-    return null;
+    return node;
   }
 
-  String _readText(List<String> keys) {
-    for (final key in keys) {
-      final value = _lookup(key);
-      if (value == null || value is Map || value is List) continue;
+  String _readPathText(List<String> path) {
+    final value = _lookupPath(path);
+    if (value == null) return '-';
 
-      final text = value.toString().trim();
-      if (text.isNotEmpty) return text;
+    if (value is num) {
+      return value.toStringAsFixed(value % 1 == 0 ? 0 : 2);
     }
+
+    return value.toString();
+  }
+
+  String _readDetected(List<String> path) {
+    final value = _lookupPath(path);
+
+    if (value == true) return 'Detected';
+    if (value == false) return 'Not Detected';
 
     return '-';
   }
 
-  bool? _readBool(List<String> keys) {
-    for (final key in keys) {
-      final value = _lookup(key);
-
-      if (value is bool) return value;
-      if (value is num) return value != 0;
-
-      if (value is String) {
-        final normalized = value.trim().toLowerCase();
-
-        if (['true', 'yes', 'y', '1'].contains(normalized)) {
-          return true;
-        }
-
-        if (['false', 'no', 'n', '0'].contains(normalized)) {
-          return false;
-        }
-      }
+  Color _detectedColor(String value, bool isTest) {
+    if (value == 'Detected') {
+      return isTest ? const Color(0xFFE85D5D) : const Color(0xFF227BFF);
     }
-
-    return null;
-  }
-
-  String _formatBool(bool? value) {
-    if (value == null) return '-';
-    return value ? 'YES' : 'NO';
-  }
-
-  Color _gradeColor(String grade) {
-    final normalized = grade.toLowerCase();
-
-    if (normalized.contains('positive')) {
-      return const Color(0xFFE85D5D);
-    }
-
-    if (normalized.contains('negative')) {
-      return const Color(0xFF227BFF);
-    }
-
-    if (normalized.contains('invalid') || normalized.contains('error')) {
-      return const Color(0xFF6B6B6B);
-    }
-
-    return const Color(0xFF2B478B);
+    return const Color(0xFF6B6B6B);
   }
 
   @override
   Widget build(BuildContext context) {
-    final grade = _readText(['grade', 'verdict', 'result']);
-    final status = _readText(['status', 'state']);
-    final reason = _readText(['reason', 'error']);
-
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Colors.transparent,
@@ -195,21 +140,15 @@ class _ResultSingleState extends State<ResultSingle> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    _summaryCard(grade, status, reason),
+                    _ctResultCard(),
                     const SizedBox(height: 16),
-
-                    // 여기 한 카드 안에
-                    // 왼쪽: 기존 검은 바탕 촬영 이미지
-                    // 오른쪽: Analysis Plot PNG 안의 ROI heatmap crop
                     _capturedImageWithAnalysisRoi(),
-
                     const SizedBox(height: 16),
                     _patientCard(),
                   ],
                 ),
               ),
             ),
-            // _bottomActions(context),
             _bottomButtons(context),
           ],
         ),
@@ -217,21 +156,23 @@ class _ResultSingleState extends State<ResultSingle> {
     );
   }
 
-  Widget _summaryCard(String grade, String status, String reason) {
-    final color = _gradeColor(grade == '-' ? status : grade);
-    final hasAnalysis = widget.analysisResult != null;
+  Widget _ctResultCard() {
+    final cDetected = _readDetected(['control', 'detected']);
+    final tDetected = _readDetected(['test', 'detected']);
 
-    final retestRecommended = _readBool([
-      'retest_recommended',
-      'retestRecommended',
-      'retest',
-    ]);
+    final cSnr = _readPathText(['control', 'snr']);
+    final tSnr = _readPathText(['test', 'snr']);
 
-    final typeMismatchWarning = _readBool([
-      'type_mismatch_warning',
-      'typeMismatchWarning',
-      'type_warning',
-    ]);
+    final cIntensity = _readPathText(['control', 'intensity_fixed_scale']);
+    final tIntensity = _readPathText(['test', 'intensity_fixed_scale']);
+
+    final c = double.tryParse(cIntensity);
+    final t = double.tryParse(tIntensity);
+    final ratio =
+        (c != null && t != null && t != 0) ? (c / t).toStringAsFixed(2) : '-';
+
+    final cY = _readPathText(['control', 'y_px_r_only']);
+    final tY = _readPathText(['test', 'y_px_r_only']);
 
     return Container(
       padding: const EdgeInsets.all(22),
@@ -249,72 +190,118 @@ class _ResultSingleState extends State<ResultSingle> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: [
-              Container(
-                width: 14,
-                height: 14,
-                decoration: BoxDecoration(color: color, shape: BoxShape.circle),
-              ),
-              const SizedBox(width: 10),
-              Text(
-                hasAnalysis ? 'Analysis Completed' : 'Analysis Pending',
-                style: const TextStyle(
-                  color: Color(0xFF2B478B),
-                  fontSize: 35,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
-          Text(
-            grade == '-' ? 'No Result' : grade.toUpperCase(),
+          const Text(
+            'C / T Line Result',
             style: TextStyle(
-              color: color,
-              fontSize: 44,
+              color: Color(0xFF1A2A4A),
+              fontSize: 38,
               fontWeight: FontWeight.w900,
-              letterSpacing: -1.0,
             ),
           ),
-          const SizedBox(height: 14),
-          _resultLine('Status', status == '-' ? '-' : status.toUpperCase()),
-          _resultLine('Retest Recommended', _formatBool(retestRecommended)),
-          _resultLine(
-            'Type Mismatch Warning',
-            _formatBool(typeMismatchWarning),
+          const SizedBox(height: 18),
+          _ctLineRow(
+            label: 'C Line',
+            detected: cDetected,
+            intensity: cIntensity,
+            color: _detectedColor(cDetected, false),
           ),
-          if (reason != '-') _resultLine('Reason', reason),
+          const SizedBox(height: 14),
+          _ctLineRow(
+            label: 'T Line',
+            detected: tDetected,
+            intensity: tIntensity,
+            color: _detectedColor(tDetected, true),
+          ),
+          const SizedBox(height: 14),
+          Container(
+            padding: const EdgeInsets.all(18),
+            decoration: BoxDecoration(
+              color: const Color(0xFFEFF3F8),
+              borderRadius: BorderRadius.circular(18),
+            ),
+            child: Row(
+              children: [
+                SizedBox(
+                  width: 200,
+                  child: Text(
+                    'C/T Ratio',
+                    style: TextStyle(
+                      color: Colors.black,
+                      fontSize: 36,
+                      fontWeight: FontWeight.w900,
+                    ),
+                  ),
+                ),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Ratio: $ratio',
+                        style: const TextStyle(
+                          color: Color(0xFF1A2A4A),
+                          fontSize: 28,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
         ],
       ),
     );
   }
 
-  Widget _resultLine(String label, String value) {
-    return Padding(
-      padding: const EdgeInsets.only(top: 6),
+  Widget _ctLineRow({
+    required String label,
+    required String detected,
+    required String intensity,
+    required Color color,
+  }) {
+    return Container(
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        color: const Color(0xFFEFF3F8),
+        borderRadius: BorderRadius.circular(18),
+      ),
       child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           SizedBox(
-            width: 500,
+            width: 200,
             child: Text(
               label,
-              style: const TextStyle(
-                fontSize: 33,
-                color: Color(0xFF6B6B6B),
-                fontWeight: FontWeight.w600,
+              style: TextStyle(
+                color: color,
+                fontSize: 36,
+                fontWeight: FontWeight.w900,
               ),
             ),
           ),
           Expanded(
-            child: Text(
-              value,
-              style: const TextStyle(
-                fontSize: 33,
-                color: Color(0xFF1A2A4A),
-                fontWeight: FontWeight.w800,
-              ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  detected,
+                  style: TextStyle(
+                    color: color,
+                    fontSize: 34,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  'Intensity: $intensity',
+                  style: const TextStyle(
+                    color: Color(0xFF1A2A4A),
+                    fontSize: 28,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
             ),
           ),
         ],
@@ -374,9 +361,6 @@ class _ResultSingleState extends State<ResultSingle> {
                       hasAnalysisPlot
                           ? AnalysisPlotRoiCropImage(
                             imagePath: plotPath,
-
-                            // Analysis Plot PNG 안에서 왼쪽 위 ROI heatmap만 crop.
-                            // 위치가 조금 안 맞으면 아래 4개 값만 조절하면 됨.
                             srcLeftRatio: 0.10,
                             srcTopRatio: 0.10,
                             srcWidthRatio: 0.24,
@@ -399,6 +383,37 @@ class _ResultSingleState extends State<ResultSingle> {
       ),
     );
   }
+  // Widget _capturedImageWithAnalysisRoi() {
+  //   const imageHeight = 360.0;
+
+  //   return Container(
+  //     padding: const EdgeInsets.all(12),
+  //     decoration: BoxDecoration(
+  //       color: Colors.white,
+  //       borderRadius: BorderRadius.circular(22),
+  //       boxShadow: [
+  //         BoxShadow(
+  //           color: Colors.black.withAlpha(16),
+  //           blurRadius: 12,
+  //           offset: const Offset(0, 5),
+  //         ),
+  //       ],
+  //     ),
+  //     child: ClipRRect(
+  //       borderRadius: BorderRadius.circular(16),
+  //       child: SizedBox(
+  //         width: double.infinity,
+  //         height: imageHeight,
+  //         child: CenterCroppedFileImage(
+  //           imagePath: widget.imagePath,
+  //           cropWidthRatio: 0.08,
+  //           cropHeightRatio: 0.30,
+  //           cropCenterYRatio: 0.55,
+  //         ),
+  //       ),
+  //     ),
+  //   );
+  // }
 
   Widget _patientCard() {
     return Container(
@@ -456,71 +471,6 @@ class _ResultSingleState extends State<ResultSingle> {
     );
   }
 
-  //   Widget _bottomActions(BuildContext context) {
-  //     return Container(
-  //       padding: const EdgeInsets.fromLTRB(20, 14, 20, 20),
-  //       decoration: const BoxDecoration(
-  //         color: Colors.white,
-  //         boxShadow: [
-  //           BoxShadow(
-  //             blurRadius: 8,
-  //             color: Colors.black12,
-  //             offset: Offset(0, -2),
-  //           ),
-  //         ],
-  //       ),
-  //       child: Row(
-  //         children: [
-  //           Expanded(
-  //             child: _actionButton(
-  //               text: 'Back',
-  //               color: const Color(0xFF6B6B6B),
-  //               onTap: () => Navigator.pop(context),
-  //             ),
-  //           ),
-  //           const SizedBox(width: 12),
-  //           Expanded(
-  //             child: _actionButton(
-  //               text: 'Completed',
-  //               color: const Color(0xFF227BFF),
-  //               onTap:
-  //                   () => Navigator.popUntil(context, (route) => route.isFirst),
-  //             ),
-  //           ),
-  //         ],
-  //       ),
-  //     );
-  //   }
-
-  //   Widget _actionButton({
-  //     required String text,
-  //     required Color color,
-  //     required VoidCallback onTap,
-  //   }) {
-  //     return GestureDetector(
-  //       onTap: onTap,
-  //       child: Container(
-  //         height: 58,
-  //         decoration: BoxDecoration(
-  //           color: color,
-  //           borderRadius: BorderRadius.circular(16),
-  //         ),
-  //         child: Center(
-  //           child: Text(
-  //             text,
-  //             style: const TextStyle(
-  //               color: Colors.white,
-  //               fontSize: 20,
-  //               fontWeight: FontWeight.w800,
-  //             ),
-  //           ),
-  //         ),
-  //       ),
-  //     );
-  //   }
-  // }
-
-  // ======================= BOTTOM BUTTONS =======================
   Widget _bottomButtons(BuildContext context) {
     return SizedBox(
       height: 200,
@@ -528,8 +478,7 @@ class _ResultSingleState extends State<ResultSingle> {
         children: [
           Expanded(
             child: InkWell(
-              onTap:
-                  () => Navigator.popUntil(context, (route) => route.isFirst),
+              onTap: () => Navigator.pop(context),
               child: Container(
                 color: const Color(0xFF227BFF),
                 child: const Center(
@@ -546,21 +495,24 @@ class _ResultSingleState extends State<ResultSingle> {
             ),
           ),
           Expanded(
-            child: Container(
-              decoration: const BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [Color(0xFF7D7D7D), Color(0xFF555555)],
+            child: InkWell(
+              onTap: () => Navigator.pop(context),
+              child: Container(
+                decoration: const BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [Color(0xFF7D7D7D), Color(0xFF555555)],
+                  ),
                 ),
-              ),
-              child: const Center(
-                child: Text(
-                  "Completed",
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 45,
-                    fontWeight: FontWeight.bold,
+                child: const Center(
+                  child: Text(
+                    "Completed",
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 45,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                 ),
               ),
@@ -600,18 +552,6 @@ class _CenterCroppedFileImageState extends State<CenterCroppedFileImage> {
     _loadImage();
   }
 
-  @override
-  void didUpdateWidget(covariant CenterCroppedFileImage oldWidget) {
-    super.didUpdateWidget(oldWidget);
-
-    if (oldWidget.imagePath != widget.imagePath) {
-      _image?.dispose();
-      _image = null;
-      _error = null;
-      _loadImage();
-    }
-  }
-
   Future<void> _loadImage() async {
     try {
       final bytes = await File(widget.imagePath).readAsBytes();
@@ -623,15 +563,10 @@ class _CenterCroppedFileImageState extends State<CenterCroppedFileImage> {
         return;
       }
 
-      setState(() {
-        _image = frame.image;
-      });
+      setState(() => _image = frame.image);
     } catch (e) {
       if (!mounted) return;
-
-      setState(() {
-        _error = e;
-      });
+      setState(() => _error = e);
     }
   }
 
@@ -691,7 +626,6 @@ class _CenterCropPainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     final imageWidth = image.width.toDouble();
     final imageHeight = image.height.toDouble();
-
     final viewAspect = size.width / size.height;
 
     var cropWidth = (imageWidth * cropWidthRatio).clamp(1.0, imageWidth);
@@ -713,7 +647,6 @@ class _CenterCropPainter extends CustomPainter {
     );
 
     final centerY = imageHeight * cropCenterYRatio;
-
     final top = (centerY - cropHeight / 2).clamp(0.0, imageHeight - cropHeight);
 
     final src = Rect.fromLTWH(left, top, cropWidth, cropHeight);
@@ -739,21 +672,9 @@ class _CenterCropPainter extends CustomPainter {
 
 class AnalysisPlotRoiCropImage extends StatefulWidget {
   final String imagePath;
-
-  /// Analysis Plot PNG 전체 기준 crop 시작 X 위치 비율.
-  /// 값을 키우면 crop 영역이 오른쪽으로 이동.
   final double srcLeftRatio;
-
-  /// Analysis Plot PNG 전체 기준 crop 시작 Y 위치 비율.
-  /// 값을 키우면 crop 영역이 아래로 이동.
   final double srcTopRatio;
-
-  /// Analysis Plot PNG 전체 기준 crop 가로 폭 비율.
-  /// 값을 줄이면 더 확대됨.
   final double srcWidthRatio;
-
-  /// Analysis Plot PNG 전체 기준 crop 세로 폭 비율.
-  /// 값을 줄이면 더 확대됨.
   final double srcHeightRatio;
 
   const AnalysisPlotRoiCropImage({
@@ -780,18 +701,6 @@ class _AnalysisPlotRoiCropImageState extends State<AnalysisPlotRoiCropImage> {
     _loadImage();
   }
 
-  @override
-  void didUpdateWidget(covariant AnalysisPlotRoiCropImage oldWidget) {
-    super.didUpdateWidget(oldWidget);
-
-    if (oldWidget.imagePath != widget.imagePath) {
-      _image?.dispose();
-      _image = null;
-      _error = null;
-      _loadImage();
-    }
-  }
-
   Future<void> _loadImage() async {
     try {
       final bytes = await File(widget.imagePath).readAsBytes();
@@ -803,15 +712,10 @@ class _AnalysisPlotRoiCropImageState extends State<AnalysisPlotRoiCropImage> {
         return;
       }
 
-      setState(() {
-        _image = frame.image;
-      });
+      setState(() => _image = frame.image);
     } catch (e) {
       if (!mounted) return;
-
-      setState(() {
-        _error = e;
-      });
+      setState(() => _error = e);
     }
   }
 
@@ -890,7 +794,6 @@ class _AnalysisPlotRoiCropPainter extends CustomPainter {
     final dst = Rect.fromLTWH(0, 0, size.width, size.height);
 
     canvas.drawRect(dst, Paint()..color = Colors.black);
-
     canvas.drawImageRect(
       image,
       src,
