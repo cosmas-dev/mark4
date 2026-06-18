@@ -5,6 +5,7 @@ import 'package:mark4/DB/run_test_json_store.dart';
 import 'package:mark4/DB/run_test_row.dart';
 import 'package:mark4/components/current_time.dart';
 import 'package:mark4/single/result_single.dart';
+import 'package:path/path.dart' as p;
 
 class RunTestListPage extends StatefulWidget {
   final String ip;
@@ -44,18 +45,69 @@ class _RunTestListPageState extends State<RunTestListPage> {
     return null;
   }
 
-  String buildCsv(List<RunTestRow> rows) {
+  // String buildCsv(List<RunTestRow> rows) {
+  //   final buffer = StringBuffer();
+
+  //   // Header
+  //   buffer.writeln('Date,Name,Item,Result');
+
+  //   for (final r in rows) {
+  //     final date =
+  //         '${r.date.year}-${_two(r.date.month)}-${_two(r.date.day)} '
+  //         '${_two(r.date.hour)}:${_two(r.date.minute)}:${_two(r.date.second)}';
+
+  //     buffer.writeln('$date,${r.userName},${r.item},${r.result}');
+  //   }
+
+  //   return buffer.toString();
+  // }
+
+  String _csvEscape(dynamic value) {
+    final text = (value ?? '').toString();
+    final escaped = text.replaceAll('"', '""');
+
+    if (escaped.contains(',') ||
+        escaped.contains('\n') ||
+        escaped.contains('"')) {
+      return '"$escaped"';
+    }
+
+    return escaped;
+  }
+
+  String buildCsvFromRaw(List<Map<String, dynamic>> rawRows) {
     final buffer = StringBuffer();
 
-    // Header
-    buffer.writeln('Date,Name,Item,Result');
+    buffer.writeln(
+      'Date,Name,Age,Gender,SampleType,Item,Result,CaptureImage,AnalysisPlotImage',
+    );
 
-    for (final r in rows) {
+    for (final e in rawRows) {
+      final createdAt = DateTime.tryParse(e['createdAt']?.toString() ?? '');
       final date =
-          '${r.date.year}-${_two(r.date.month)}-${_two(r.date.day)} '
-          '${_two(r.date.hour)}:${_two(r.date.minute)}:${_two(r.date.second)}';
+          createdAt == null
+              ? ''
+              : '${createdAt.year}-${_two(createdAt.month)}-${_two(createdAt.day)} '
+                  '${_two(createdAt.hour)}:${_two(createdAt.minute)}:${_two(createdAt.second)}';
 
-      buffer.writeln('$date,${r.userName},${r.item},${r.result}');
+      final imagePath = e['imagePath']?.toString() ?? '';
+      final analysisPlotPath = e['analysisPlotPath']?.toString() ?? '';
+
+      buffer.writeln(
+        [
+          date,
+          e['userName'] ?? '',
+          e['age'] ?? '',
+          e['gender'] ?? '',
+          e['sampleType'] ?? '',
+          e['item'] ?? '',
+          e['result'] ?? '',
+          imagePath.isNotEmpty ? 'images/${p.basename(imagePath)}' : '',
+          analysisPlotPath.isNotEmpty
+              ? 'images/${p.basename(analysisPlotPath)}'
+              : '',
+        ].map(_csvEscape).join(','),
+      );
     }
 
     return buffer.toString();
@@ -357,10 +409,8 @@ class _RunTestListPageState extends State<RunTestListPage> {
             flex: 1,
             child: InkWell(
               onTap: () {
-                setState(() {
-                  // exportSelectedToUsb();
-                  _confirmExportSelected();
-                });
+                // exportSelectedToUsb();
+                _confirmExportSelected();
               },
               child: Container(
                 color: const Color(0xFF227BFF),
@@ -447,10 +497,82 @@ class _RunTestListPageState extends State<RunTestListPage> {
     setState(() {});
   }
 
+  // ---------------- USB에 이미지 복사 ----------------
+
+  Future<void> _copyImagesToUsb({
+    required List<Map<String, dynamic>> rawRows,
+    required Directory exportDir,
+  }) async {
+    final imageDir = Directory('${exportDir.path}/images');
+
+    if (!await imageDir.exists()) {
+      await imageDir.create(recursive: true);
+    }
+
+    final usedNames = <String, int>{};
+
+    Future<void> copyOne(String? sourcePath) async {
+      if (sourcePath == null || sourcePath.trim().isEmpty) return;
+
+      final sourceFile = File(sourcePath);
+
+      if (!await sourceFile.exists()) {
+        debugPrint('이미지 파일 없음: $sourcePath');
+        return;
+      }
+
+      final originalName = p.basename(sourcePath);
+      final ext = p.extension(originalName);
+      final nameWithoutExt = p.basenameWithoutExtension(originalName);
+
+      final count = usedNames[originalName] ?? 0;
+      usedNames[originalName] = count + 1;
+
+      final saveName =
+          count == 0 ? originalName : '${nameWithoutExt}_$count$ext';
+
+      final targetFile = File('${imageDir.path}/$saveName');
+
+      try {
+        await sourceFile.copy(targetFile.path);
+      } catch (e) {
+        debugPrint('이미지 복사 실패: $sourcePath -> ${targetFile.path}, $e');
+      }
+    }
+
+    for (final e in rawRows) {
+      await copyOne(e['imagePath']?.toString());
+      await copyOne(e['analysisPlotPath']?.toString());
+    }
+  }
+
   // ---------------- USB 전체 저장 ----------------
 
+  // Future<void> exportAllToUsb() async {
+  //   if (rows.isEmpty) {
+  //     _showSnack('No data to save');
+  //     return;
+  //   }
+
+  //   final usbDir = findUsbDirectory();
+  //   if (usbDir == null) {
+  //     _showSnack('USB not connected');
+  //     return;
+  //   }
+
+  //   final fileName =
+  //       'run_test_ALL_${DateTime.now().millisecondsSinceEpoch}.csv';
+  //   final file = File('${usbDir.path}/$fileName');
+
+  //   final csv = buildCsv(rows);
+  //   await file.writeAsString(csv, flush: true);
+
+  //   _showSaveCompletedDialog();
+  // }
   Future<void> exportAllToUsb() async {
-    if (rows.isEmpty) {
+    final raw = await store.readAll();
+
+    if (raw.isEmpty) {
       _showSnack('No data to save');
       return;
     }
@@ -461,12 +583,26 @@ class _RunTestListPageState extends State<RunTestListPage> {
       return;
     }
 
-    final fileName =
-        'run_test_ALL_${DateTime.now().millisecondsSinceEpoch}.csv';
-    final file = File('${usbDir.path}/$fileName');
+    raw.sort(
+      (a, b) => DateTime.parse(
+        b['createdAt'],
+      ).compareTo(DateTime.parse(a['createdAt'])),
+    );
 
-    final csv = buildCsv(rows);
-    await file.writeAsString(csv, flush: true);
+    final exportName = 'run_test_ALL_${DateTime.now().millisecondsSinceEpoch}';
+
+    final exportDir = Directory('${usbDir.path}/$exportName');
+
+    if (!await exportDir.exists()) {
+      await exportDir.create(recursive: true);
+    }
+
+    final csvFile = File('${exportDir.path}/$exportName.csv');
+
+    final csv = buildCsvFromRaw(raw);
+    await csvFile.writeAsString(csv, flush: true);
+
+    await _copyImagesToUsb(rawRows: raw, exportDir: exportDir);
 
     _showSaveCompletedDialog();
   }
@@ -578,10 +714,34 @@ class _RunTestListPageState extends State<RunTestListPage> {
 
   // ---------------- Export to USB ----------------
 
-  Future<void> exportSelectedToUsb() async {
-    final selected = rows.where((r) => r.selected).toList();
+  // Future<void> exportSelectedToUsb() async {
+  //   final selected = rows.where((r) => r.selected).toList();
 
-    if (selected.isEmpty) {
+  //   if (selected.isEmpty) {
+  //     _showSnack('No selected items to save');
+  //     return;
+  //   }
+
+  //   final usbDir = findUsbDirectory();
+  //   if (usbDir == null) {
+  //     _showSnack('USB not connected');
+  //     return;
+  //   }
+
+  //   final fileName = 'run_test_${DateTime.now().millisecondsSinceEpoch}.csv';
+  //   final file = File('${usbDir.path}/$fileName');
+
+  //   final csv = buildCsv(selected);
+  //   await file.writeAsString(csv, flush: true);
+
+  //   _clearSelection();
+
+  //   _showSaveCompletedDialog();
+  // }
+  Future<void> exportSelectedToUsb() async {
+    final selectedIds = rows.where((r) => r.selected).map((r) => r.id).toSet();
+
+    if (selectedIds.isEmpty) {
       _showSnack('No selected items to save');
       return;
     }
@@ -592,11 +752,37 @@ class _RunTestListPageState extends State<RunTestListPage> {
       return;
     }
 
-    final fileName = 'run_test_${DateTime.now().millisecondsSinceEpoch}.csv';
-    final file = File('${usbDir.path}/$fileName');
+    final raw = await store.readAll();
 
-    final csv = buildCsv(selected);
-    await file.writeAsString(csv, flush: true);
+    final selectedRaw =
+        raw.where((e) => selectedIds.contains(e['id']?.toString())).toList();
+
+    if (selectedRaw.isEmpty) {
+      _showSnack('No selected items to save');
+      return;
+    }
+
+    selectedRaw.sort(
+      (a, b) => DateTime.parse(
+        b['createdAt'],
+      ).compareTo(DateTime.parse(a['createdAt'])),
+    );
+
+    final exportName =
+        'run_test_SELECTED_${DateTime.now().millisecondsSinceEpoch}';
+
+    final exportDir = Directory('${usbDir.path}/$exportName');
+
+    if (!await exportDir.exists()) {
+      await exportDir.create(recursive: true);
+    }
+
+    final csvFile = File('${exportDir.path}/$exportName.csv');
+
+    final csv = buildCsvFromRaw(selectedRaw);
+    await csvFile.writeAsString(csv, flush: true);
+
+    await _copyImagesToUsb(rawRows: selectedRaw, exportDir: exportDir);
 
     _clearSelection();
 

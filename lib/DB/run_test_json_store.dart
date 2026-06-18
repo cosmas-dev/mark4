@@ -153,23 +153,52 @@ class RunTestJsonStore {
     await file.writeAsString(jsonEncode(rows), flush: true);
   }
 
+  // Future<void> deleteByIds(List<String> ids) async {
+  //   final list = await readAll();
+
+  //   final toDelete = list.where((e) => ids.contains(e['id'])).toList();
+
+  //   for (final item in toDelete) {
+  //     final imagePath = item['imagePath'];
+  //     if (imagePath is String && imagePath.isNotEmpty) {
+  //       final imageFile = File(imagePath);
+  //       if (await imageFile.exists()) {
+  //         try {
+  //           await imageFile.delete();
+  //         } catch (_) {
+  //           // 이미지 삭제 실패 시에도 JSON 정리는 계속 진행
+  //         }
+  //       }
+  //     }
+  //   }
+
+  //   list.removeWhere((e) => ids.contains(e['id']));
+
+  //   final file = await _file();
+  //   await file.writeAsString(jsonEncode(list), flush: true);
+  // }
   Future<void> deleteByIds(List<String> ids) async {
     final list = await readAll();
 
     final toDelete = list.where((e) => ids.contains(e['id'])).toList();
 
-    for (final item in toDelete) {
-      final imagePath = item['imagePath'];
-      if (imagePath is String && imagePath.isNotEmpty) {
-        final imageFile = File(imagePath);
-        if (await imageFile.exists()) {
-          try {
-            await imageFile.delete();
-          } catch (_) {
-            // 이미지 삭제 실패 시에도 JSON 정리는 계속 진행
-          }
+    Future<void> deleteFilePath(dynamic pathValue) async {
+      if (pathValue is! String || pathValue.isEmpty) return;
+
+      final file = File(pathValue);
+
+      if (await file.exists()) {
+        try {
+          await file.delete();
+        } catch (_) {
+          // 파일 삭제 실패 시에도 JSON 정리는 계속 진행
         }
       }
+    }
+
+    for (final item in toDelete) {
+      await deleteFilePath(item['imagePath']);
+      await deleteFilePath(item['analysisPlotPath']);
     }
 
     list.removeWhere((e) => ids.contains(e['id']));
