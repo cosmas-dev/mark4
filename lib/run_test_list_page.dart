@@ -78,9 +78,7 @@ class _RunTestListPageState extends State<RunTestListPage> {
   String buildCsvFromRaw(List<Map<String, dynamic>> rawRows) {
     final buffer = StringBuffer();
 
-    buffer.writeln(
-      'Date,Name,Age,Gender,SampleType,Item,Result,CaptureImage,AnalysisPlotImage',
-    );
+    buffer.writeln('Date,Name,Age,Gender,SampleType,Item,Result,CaptureImage');
 
     for (final e in rawRows) {
       final createdAt = DateTime.tryParse(e['createdAt']?.toString() ?? '');
@@ -91,7 +89,6 @@ class _RunTestListPageState extends State<RunTestListPage> {
                   '${_two(createdAt.hour)}:${_two(createdAt.minute)}:${_two(createdAt.second)}';
 
       final imagePath = e['imagePath']?.toString() ?? '';
-      final analysisPlotPath = e['analysisPlotPath']?.toString() ?? '';
 
       buffer.writeln(
         [
@@ -103,9 +100,6 @@ class _RunTestListPageState extends State<RunTestListPage> {
           e['item'] ?? '',
           e['result'] ?? '',
           imagePath.isNotEmpty ? 'images/${p.basename(imagePath)}' : '',
-          analysisPlotPath.isNotEmpty
-              ? 'images/${p.basename(analysisPlotPath)}'
-              : '',
         ].map(_csvEscape).join(','),
       );
     }
@@ -542,7 +536,6 @@ class _RunTestListPageState extends State<RunTestListPage> {
 
     for (final e in rawRows) {
       await copyOne(e['imagePath']?.toString());
-      await copyOne(e['analysisPlotPath']?.toString());
     }
   }
 
@@ -589,7 +582,7 @@ class _RunTestListPageState extends State<RunTestListPage> {
       ).compareTo(DateTime.parse(a['createdAt'])),
     );
 
-    final exportName = 'run_test_ALL_${DateTime.now().millisecondsSinceEpoch}';
+    final exportName = 'COSMAS';
 
     final exportDir = Directory('${usbDir.path}/$exportName');
 
@@ -597,7 +590,9 @@ class _RunTestListPageState extends State<RunTestListPage> {
       await exportDir.create(recursive: true);
     }
 
-    final csvFile = File('${exportDir.path}/$exportName.csv');
+    final csvFile = File(
+      '${exportDir.path}/test_ALL_${DateTime.now().millisecondsSinceEpoch}.csv',
+    );
 
     final csv = buildCsvFromRaw(raw);
     await csvFile.writeAsString(csv, flush: true);
@@ -768,8 +763,7 @@ class _RunTestListPageState extends State<RunTestListPage> {
       ).compareTo(DateTime.parse(a['createdAt'])),
     );
 
-    final exportName =
-        'run_test_SELECTED_${DateTime.now().millisecondsSinceEpoch}';
+    final exportName = 'COSMAS';
 
     final exportDir = Directory('${usbDir.path}/$exportName');
 
@@ -777,7 +771,9 @@ class _RunTestListPageState extends State<RunTestListPage> {
       await exportDir.create(recursive: true);
     }
 
-    final csvFile = File('${exportDir.path}/$exportName.csv');
+    final csvFile = File(
+      '${exportDir.path}/test_SELECTED_${DateTime.now().millisecondsSinceEpoch}.csv',
+    );
 
     final csv = buildCsvFromRaw(selectedRaw);
     await csvFile.writeAsString(csv, flush: true);
