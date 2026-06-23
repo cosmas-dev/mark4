@@ -25,7 +25,7 @@ void main() async {
     });
   }
 
-  runApp(MyApp(ip: "192.168.0.105" ?? "192.168.0.105"));
+  runApp(MyApp(ip: ip ?? "192.168.0.105"));
 }
 
 class MyApp extends StatelessWidget {
