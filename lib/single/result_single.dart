@@ -151,19 +151,19 @@ class _ResultSingleState extends State<ResultSingle> {
     final cDetected = _readDetected(['control', 'detected']);
     final tDetected = _readDetected(['test', 'detected']);
 
-    final cSnr = _readPathText(['control', 'snr']);
-    final tSnr = _readPathText(['test', 'snr']);
+    // final cSnr = _readPathText(['control', 'snr']);
+    // final tSnr = _readPathText(['test', 'snr']);
 
     final cIntensity = _readPathText(['control', 'intensity_fixed_scale']);
     final tIntensity = _readPathText(['test', 'intensity_fixed_scale']);
 
-    final c = double.tryParse(cIntensity);
-    final t = double.tryParse(tIntensity);
-    final ratio =
-        (c != null && t != null && t != 0) ? (c / t).toStringAsFixed(2) : '-';
+    // final c = double.tryParse(cIntensity);
+    // final t = double.tryParse(tIntensity);
+    // final ratio =
+    //     (c != null && t != null && t != 0) ? (c / t).toStringAsFixed(2) : '-';
 
-    final cY = _readPathText(['control', 'y_px_r_only']);
-    final tY = _readPathText(['test', 'y_px_r_only']);
+    // final cY = _readPathText(['control', 'y_px_r_only']);
+    // final tY = _readPathText(['test', 'y_px_r_only']);
 
     return Container(
       padding: const EdgeInsets.all(22),
@@ -204,43 +204,43 @@ class _ResultSingleState extends State<ResultSingle> {
             color: _detectedColor(tDetected, true),
           ),
           const SizedBox(height: 14),
-          Container(
-            padding: const EdgeInsets.all(18),
-            decoration: BoxDecoration(
-              color: const Color(0xFFEFF3F8),
-              borderRadius: BorderRadius.circular(18),
-            ),
-            child: Row(
-              children: [
-                SizedBox(
-                  width: 200,
-                  child: Text(
-                    'C/T Ratio',
-                    style: TextStyle(
-                      color: Colors.black,
-                      fontSize: 36,
-                      fontWeight: FontWeight.w900,
-                    ),
-                  ),
-                ),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Ratio: $ratio',
-                        style: const TextStyle(
-                          color: Color(0xFF1A2A4A),
-                          fontSize: 28,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
+          // Container(
+          //   padding: const EdgeInsets.all(18),
+          //   decoration: BoxDecoration(
+          //     color: const Color(0xFFEFF3F8),
+          //     borderRadius: BorderRadius.circular(18),
+          //   ),
+          //   child: Row(
+          //     children: [
+          //       SizedBox(
+          //         width: 200,
+          //         child: Text(
+          //           'C/T Ratio',
+          //           style: TextStyle(
+          //             color: Colors.black,
+          //             fontSize: 36,
+          //             fontWeight: FontWeight.w900,
+          //           ),
+          //         ),
+          //       ),
+          //       Expanded(
+          //         child: Column(
+          //           crossAxisAlignment: CrossAxisAlignment.start,
+          //           children: [
+          //             Text(
+          //               'Ratio: $ratio',
+          //               style: const TextStyle(
+          //                 color: Color(0xFF1A2A4A),
+          //                 fontSize: 28,
+          //                 fontWeight: FontWeight.w600,
+          //               ),
+          //             ),
+          //           ],
+          //         ),
+          //       ),
+          //     ],
+          //   ),
+          // ),
         ],
       ),
     );

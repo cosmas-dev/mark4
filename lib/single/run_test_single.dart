@@ -20,7 +20,6 @@ class RunTestSingle extends StatefulWidget {
 }
 
 class _RunTestSingleState extends State<RunTestSingle> {
-  final FocusNode _focusNode = FocusNode();
   final _formKey = GlobalKey<FormState>();
   int openClose = 1;
   bool showPopup = false;
@@ -29,7 +28,6 @@ class _RunTestSingleState extends State<RunTestSingle> {
   // final String iotDeviceIp = "192.168.0.39";
 
   final TextEditingController userIdController = TextEditingController();
-  final TextEditingController ageController = TextEditingController();
 
   String? selectedItem;
   String? sampleType;
@@ -39,6 +37,7 @@ class _RunTestSingleState extends State<RunTestSingle> {
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
+      behavior: HitTestBehavior.deferToChild,
       onTap: () {
         FocusScope.of(context).unfocus();
       },
@@ -458,18 +457,34 @@ class _RunTestSingleState extends State<RunTestSingle> {
   }
 
   Widget _input(TextEditingController c, {bool isNumber = false}) {
-    return Container(
+    return SizedBox(
       height: 70,
-      padding: const EdgeInsets.symmetric(horizontal: 12),
-      decoration: BoxDecoration(
-        border: Border.all(color: Colors.black12),
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: TextField(
+      child: TextFormField(
         controller: c,
-        keyboardType: isNumber ? TextInputType.number : null,
-        decoration: const InputDecoration(border: InputBorder.none),
+        keyboardType: isNumber ? TextInputType.number : TextInputType.text,
+        textInputAction: TextInputAction.done,
+        validator: (v) {
+          if (v == null || v.trim().isEmpty) {
+            return "User ID를 입력해주세요";
+          }
+          return null;
+        },
         style: const TextStyle(fontSize: 35),
+        decoration: InputDecoration(
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 12,
+            vertical: 18,
+          ),
+          border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(8),
+            borderSide: const BorderSide(color: Colors.black12),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(8),
+            borderSide: const BorderSide(color: Colors.blue),
+          ),
+        ),
       ),
     );
   }

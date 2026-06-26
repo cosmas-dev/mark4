@@ -312,7 +312,7 @@ class _PreparingPageSingleState extends State<PreparingPageSingle> {
               ),
               child: const Center(
                 child: Text(
-                  "Auto Contdown",
+                  "Auto Countdown",
                   style: TextStyle(
                     color: Colors.white,
                     fontSize: 45,
