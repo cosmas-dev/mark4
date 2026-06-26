@@ -398,12 +398,14 @@ class _RunTestSingleState extends State<RunTestSingle> {
                         if (!_formKey.currentState!.validate()) {
                           return; // 🔥 여기서 끝
                         }
+                        await _hideLinuxKeyboard();
                         setState(() => showPopup = false);
                       }),
                     ),
                     const SizedBox(width: 12),
                     Expanded(
-                      child: _popupBtn("Reset", () {
+                      child: _popupBtn("Reset", () async {
+                        await _hideLinuxKeyboard();
                         setState(() {
                           // Form 에러/상태 초기화
                           _formKey.currentState?.reset();
@@ -420,7 +422,8 @@ class _RunTestSingleState extends State<RunTestSingle> {
                     ),
                     const SizedBox(width: 12),
                     Expanded(
-                      child: _popupBtn("Cancel", () {
+                      child: _popupBtn("Cancel", () async {
+                        await _hideLinuxKeyboard();
                         setState(() => showPopup = false);
                       }),
                     ),
@@ -463,6 +466,9 @@ class _RunTestSingleState extends State<RunTestSingle> {
         controller: c,
         keyboardType: isNumber ? TextInputType.number : TextInputType.text,
         textInputAction: TextInputAction.done,
+        onTap: () async {
+          await _showLinuxKeyboard();
+        },
         validator: (v) {
           if (v == null || v.trim().isEmpty) {
             return "User ID를 입력해주세요";
@@ -476,17 +482,25 @@ class _RunTestSingleState extends State<RunTestSingle> {
             vertical: 18,
           ),
           border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-          enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(8),
-            borderSide: const BorderSide(color: Colors.black12),
-          ),
-          focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(8),
-            borderSide: const BorderSide(color: Colors.blue),
-          ),
         ),
       ),
     );
+  }
+
+  Future<void> _showLinuxKeyboard() async {
+    try {
+      await Process.start('squeekboard', [], mode: ProcessStartMode.detached);
+    } catch (e) {
+      debugPrint('squeekboard 실행 실패: $e');
+    }
+  }
+
+  Future<void> _hideLinuxKeyboard() async {
+    for (final name in ['onboard', 'matchbox-keyboard', 'squeekboard']) {
+      try {
+        await Process.run('pkill', [name]);
+      } catch (_) {}
+    }
   }
 
   Widget _dropdown() {
