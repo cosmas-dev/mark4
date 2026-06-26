@@ -28,10 +28,9 @@ class _RunTestSingleState extends State<RunTestSingle> {
   Socket? socket;
   // final String iotDeviceIp = "192.168.0.39";
 
-  final TextEditingController userNameController = TextEditingController();
+  final TextEditingController userIdController = TextEditingController();
   final TextEditingController ageController = TextEditingController();
 
-  String? gender;
   String? selectedItem;
   String? sampleType;
   final List<String> itemOptions = ['Flu', 'COVID19', 'RSV'];
@@ -168,11 +167,9 @@ class _RunTestSingleState extends State<RunTestSingle> {
                       builder:
                           (context) => PreparingPageSingle(
                             shutterSpeed: widget.shutterSpeed,
-                            userName: "고스마",
-                            age: "11",
-                            gender: "Male",
-                            sampleType: "Test",
-                            selectedItem: "Test",
+                            userId: userIdController.text,
+                            sampleType: sampleType ?? "Null",
+                            selectedItem: selectedItem ?? "Null",
                             ip: widget.ip,
                           ),
                     ),
@@ -344,7 +341,7 @@ class _RunTestSingleState extends State<RunTestSingle> {
                           },
                           // 🔥 선택된 값 표시용
                           selectedItemBuilder: (context) {
-                            return itemOptions.map((e) {
+                            return sampleTypeOptions.map((e) {
                               return Align(
                                 alignment: Alignment.centerLeft,
                                 child: Text(
@@ -386,46 +383,8 @@ class _RunTestSingleState extends State<RunTestSingle> {
                     _label("Item"),
                     _dropdown(),
 
-                    _label("User Name *"),
-                    _input(userNameController),
-
-                    _label("Age"),
-                    _input(ageController, isNumber: true),
-
-                    _label("Gender"),
-                    FormField<int>(
-                      validator: (_) {
-                        if (gender == null) {
-                          return "Gender를 선택해주세요";
-                        }
-                        return null;
-                      },
-                      builder: (state) {
-                        return Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Row(
-                              children: [
-                                _genderBtn("Male"),
-                                const SizedBox(width: 12),
-                                _genderBtn("Female"),
-                              ],
-                            ),
-                            if (state.hasError)
-                              Padding(
-                                padding: const EdgeInsets.only(top: 4),
-                                child: Text(
-                                  state.errorText!,
-                                  style: const TextStyle(
-                                    color: Colors.red,
-                                    fontSize: 12,
-                                  ),
-                                ),
-                              ),
-                          ],
-                        );
-                      },
-                    ),
+                    _label("User ID *"),
+                    _input(userIdController),
                   ],
                 ),
               ),
@@ -451,9 +410,7 @@ class _RunTestSingleState extends State<RunTestSingle> {
                           _formKey.currentState?.reset();
 
                           // 현재 채널 값 초기화
-                          userNameController.clear();
-                          ageController.clear();
-                          gender = null;
+                          userIdController.clear();
                           selectedItem = null;
                           sampleType = null;
                         });
@@ -572,30 +529,30 @@ class _RunTestSingleState extends State<RunTestSingle> {
     );
   }
 
-  Widget _genderBtn(String text) {
-    final selected = gender == text;
-    return Expanded(
-      child: InkWell(
-        onTap: () => setState(() => gender = text),
+  // Widget _genderBtn(String text) {
+  //   final selected = gender == text;
+  //   return Expanded(
+  //     child: InkWell(
+  //       onTap: () => setState(() => gender = text),
 
-        child: Container(
-          height: 80,
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(8),
-            border: Border.all(color: selected ? Colors.blue : Colors.black12),
-          ),
-          child: Center(
-            child: Text(
-              text,
-              style: TextStyle(
-                fontWeight: FontWeight.w600,
-                color: selected ? Colors.blue : Colors.black,
-                fontSize: 35,
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
+  //       child: Container(
+  //         height: 80,
+  //         decoration: BoxDecoration(
+  //           borderRadius: BorderRadius.circular(8),
+  //           border: Border.all(color: selected ? Colors.blue : Colors.black12),
+  //         ),
+  //         child: Center(
+  //           child: Text(
+  //             text,
+  //             style: TextStyle(
+  //               fontWeight: FontWeight.w600,
+  //               color: selected ? Colors.blue : Colors.black,
+  //               fontSize: 35,
+  //             ),
+  //           ),
+  //         ),
+  //       ),
+  //     ),
+  //   );
+  // }
 }

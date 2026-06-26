@@ -78,7 +78,7 @@ class _RunTestListPageState extends State<RunTestListPage> {
   String buildCsvFromRaw(List<Map<String, dynamic>> rawRows) {
     final buffer = StringBuffer();
 
-    buffer.writeln('Date,Name,Age,Gender,SampleType,Item,Result,CaptureImage');
+    buffer.writeln('Date,UserId,SampleType,Item,Result,CaptureImage');
 
     for (final e in rawRows) {
       final createdAt = DateTime.tryParse(e['createdAt']?.toString() ?? '');
@@ -93,9 +93,7 @@ class _RunTestListPageState extends State<RunTestListPage> {
       buffer.writeln(
         [
           date,
-          e['userName'] ?? '',
-          e['age'] ?? '',
-          e['gender'] ?? '',
+          e['userId'] ?? '',
           e['sampleType'] ?? '',
           e['item'] ?? '',
           e['result'] ?? '',
@@ -234,7 +232,7 @@ class _RunTestListPageState extends State<RunTestListPage> {
             ),
           ),
           const _HeaderCell('Date'),
-          const _HeaderCell('Name'),
+          const _HeaderCell('User ID'),
           const _HeaderCell('Item'),
           const _HeaderCell('Result'),
         ],
@@ -256,11 +254,9 @@ class _RunTestListPageState extends State<RunTestListPage> {
             builder:
                 (_) => ResultSingle(
                   shutterSpeed: data['shutterSpeed'] ?? '',
-                  userName: data['userName'] ?? '',
-                  gender: data['gender'] ?? '',
+                  userId: data['userId'] ?? '',
                   sampleType: data['sampleType'] ?? '',
                   selectedItem: data['item'] ?? '',
-                  age: data['age'] ?? '',
                   imagePath: data['imagePath'] ?? '',
                   analysisPlotPath: data['analysisPlotPath'],
                   analysisResult:
@@ -296,7 +292,7 @@ class _RunTestListPageState extends State<RunTestListPage> {
               ),
             ),
             _Cell(_formatDate(row.date)),
-            _Cell(row.userName),
+            _Cell(row.userId),
             _Cell(row.item),
             _Cell(row.result),
           ],
@@ -478,7 +474,7 @@ class _RunTestListPageState extends State<RunTestListPage> {
         RunTestRow(
           id: e['id'],
           date: DateTime.parse(e['createdAt']),
-          userName: e['userName'] ?? 'Unknown',
+          userId: e['userId'] ?? 'Unknown',
           // age: e['age'] ?? 'Unknown',
           // gender: e['gender'] ?? 'Unknown',
           item: e['item'] ?? 'Unknown',

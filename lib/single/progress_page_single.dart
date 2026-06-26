@@ -9,7 +9,7 @@
 // import 'package:path_provider/path_provider.dart';
 
 // class ProgressPageSingle extends StatefulWidget {
-//   final String userName,
+//   final String userId,
 //       age,
 //       gender,
 //       sampleType,
@@ -19,7 +19,7 @@
 
 //   const ProgressPageSingle({
 //     super.key,
-//     required this.userName,
+//     required this.userId,
 //     required this.shutterSpeed,
 //     required this.gender,
 //     required this.sampleType,
@@ -330,7 +330,7 @@
 //         builder:
 //             (context) => ResultSingle(
 //               shutterSpeed: widget.shutterSpeed,
-//               userName: widget.userName,
+//               userId: widget.userId,
 //               gender: widget.gender,
 //               sampleType: widget.sampleType,
 //               selectedItem: widget.selectedItem,
@@ -400,22 +400,14 @@ import 'package:mark4/single/result_single.dart';
 import 'package:path_provider/path_provider.dart';
 
 class ProgressPageSingle extends StatefulWidget {
-  final String userName,
-      age,
-      gender,
-      sampleType,
-      selectedItem,
-      shutterSpeed,
-      ip;
+  final String userId, sampleType, selectedItem, shutterSpeed, ip;
 
   const ProgressPageSingle({
     super.key,
-    required this.userName,
+    required this.userId,
     required this.shutterSpeed,
-    required this.gender,
     required this.sampleType,
     required this.selectedItem,
-    required this.age,
     required this.ip,
   });
 
@@ -794,11 +786,9 @@ class _ProgressPageSingleState extends State<ProgressPageSingle>
         builder:
             (context) => ResultSingle(
               shutterSpeed: widget.shutterSpeed,
-              userName: widget.userName,
-              gender: widget.gender,
+              userId: widget.userId,
               sampleType: widget.sampleType,
               selectedItem: widget.selectedItem,
-              age: widget.age,
               imagePath: _imagePath!,
               analysisPlotPath: _analysisPlotPath,
               ip: widget.ip,
@@ -815,9 +805,7 @@ class _ProgressPageSingleState extends State<ProgressPageSingle>
     try {
       await store.save(
         shutterSpeed: widget.shutterSpeed,
-        name: widget.userName,
-        age: widget.age,
-        gender: widget.gender,
+        userId: widget.userId,
         item: widget.selectedItem,
         sampleType: widget.sampleType,
         imagePath: _imagePath!,
@@ -831,9 +819,21 @@ class _ProgressPageSingleState extends State<ProgressPageSingle>
   }
 
   String _buildResultString() {
-    final c = _readDetected(['control', 'detected']);
-    final t = _readDetected(['test', 'detected']);
-    return 'C: $c / T: $t';
+    final cIntensity = _readPathText(['control', 'intensity_fixed_scale']);
+    final tIntensity = _readPathText(['test', 'intensity_fixed_scale']);
+
+    return 'C: $cIntensity / T: $tIntensity';
+  }
+
+  String _readPathText(List<String> path) {
+    final value = _lookupPath(path);
+    if (value == null) return '-';
+
+    if (value is num) {
+      return value.toStringAsFixed(value % 1 == 0 ? 0 : 2);
+    }
+
+    return value.toString();
   }
 
   dynamic _lookupPath(List<String> path) {

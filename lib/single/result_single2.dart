@@ -4,25 +4,16 @@ import 'package:flutter/material.dart';
 import 'package:mark4/DB/run_test_json_store.dart';
 
 class ResultSingle extends StatefulWidget {
-  final String userName,
-      age,
-      gender,
-      sampleType,
-      selectedItem,
-      imagePath,
-      shutterSpeed,
-      ip;
+  final String userId, sampleType, selectedItem, imagePath, shutterSpeed, ip;
   final Map<String, dynamic>? analysisResult;
 
   const ResultSingle({
     super.key,
     required this.shutterSpeed,
     required this.ip,
-    required this.userName,
-    required this.gender,
+    required this.userId,
     required this.sampleType,
     required this.selectedItem,
-    required this.age,
     required this.imagePath,
     this.analysisResult,
   });
@@ -48,9 +39,7 @@ class _ResultSingleState extends State<ResultSingle> {
     try {
       await store.save(
         shutterSpeed: widget.shutterSpeed,
-        name: widget.userName,
-        age: widget.age,
-        gender: widget.gender,
+        userId: widget.userId,
         item: widget.selectedItem,
         sampleType: widget.sampleType,
         imagePath: widget.imagePath,
@@ -352,8 +341,7 @@ class _ResultSingleState extends State<ResultSingle> {
             ),
           ),
           const SizedBox(height: 14),
-          _infoRow('User ID', widget.userName),
-          _infoRow('Age / Gender', '${widget.age} / ${widget.gender}'),
+          _infoRow('User ID', widget.userId),
           _infoRow('Item', widget.selectedItem),
           _infoRow('Sample Type', widget.sampleType),
           _infoRow('Shutter', widget.shutterSpeed),

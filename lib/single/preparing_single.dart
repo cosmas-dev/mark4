@@ -6,19 +6,11 @@ import 'package:mark4/home.dart';
 import 'package:mark4/single/progress_page_single.dart';
 
 class PreparingPageSingle extends StatefulWidget {
-  final String userName,
-      age,
-      gender,
-      sampleType,
-      selectedItem,
-      shutterSpeed,
-      ip;
+  final String userId, sampleType, selectedItem, shutterSpeed, ip;
   const PreparingPageSingle({
     super.key,
     required this.shutterSpeed,
-    required this.userName,
-    required this.age,
-    required this.gender,
+    required this.userId,
     required this.sampleType,
     required this.selectedItem,
     required this.ip,
@@ -279,11 +271,9 @@ class _PreparingPageSingleState extends State<PreparingPageSingle> {
                     builder:
                         (context) => ProgressPageSingle(
                           shutterSpeed: widget.shutterSpeed,
-                          userName: widget.userName,
-                          gender: widget.gender,
+                          userId: widget.userId,
                           sampleType: widget.sampleType,
                           selectedItem: widget.selectedItem,
-                          age: widget.age,
                           ip: widget.ip,
                         ),
                   ),

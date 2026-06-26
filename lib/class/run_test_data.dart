@@ -32,33 +32,25 @@
 //   }
 // }
 class RunTestData {
-  final String userName;
-  final String age;
-  final String gender;
+  final String userId;
   final String item;
   final String sampleType;
 
   RunTestData({
-    required this.userName,
-    required this.age,
-    required this.gender,
+    required this.userId,
     required this.item,
     required this.sampleType,
   });
 
   Map<String, dynamic> toJson() => {
-    'userName': userName,
-    'age': age,
-    'gender': gender,
+    'userId': userId,
     'item': item,
     'sampleType': sampleType,
   };
 
   factory RunTestData.fromJson(Map<String, dynamic> json) {
     return RunTestData(
-      userName: json['userName'] ?? '',
-      age: json['age'] ?? '',
-      gender: json['gender'] ?? '',
+      userId: json['userId'] ?? '',
       item: json['item'] ?? '',
       sampleType: json['sampleType'] ?? '',
     );

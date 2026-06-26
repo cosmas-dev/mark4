@@ -22,7 +22,7 @@
 
 //   Future<void> save({
 //     // required RunTestData data,
-//     required String name,
+//     required String userId,
 //     required String age,
 //     required String gender,
 //     required String item,
@@ -34,7 +34,7 @@
 
 //     list.add({
 //       'id': const Uuid().v4(),
-//       'userName': name,
+//       'userName': userId,
 //       'age': age,
 //       'gender': gender,
 //       'item': item,
@@ -120,9 +120,7 @@ class RunTestJsonStore {
 
   Future<void> save({
     required String shutterSpeed,
-    required String name,
-    required String age,
-    required String gender,
+    required String userId,
     required String item,
     required String sampleType,
     required String imagePath,
@@ -136,9 +134,7 @@ class RunTestJsonStore {
       'id': DateTime.now().millisecondsSinceEpoch.toString(),
       'createdAt': DateTime.now().toIso8601String(),
       'shutterSpeed': shutterSpeed,
-      'userName': name,
-      'age': age,
-      'gender': gender,
+      'userId': userId,
       'item': item,
       'sampleType': sampleType,
       'imagePath': imagePath,

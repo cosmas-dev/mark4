@@ -4,25 +4,16 @@ import 'package:flutter/material.dart';
 import 'package:mark4/DB/run_test_json_store.dart';
 
 class ResultSingle extends StatefulWidget {
-  final String userName,
-      age,
-      gender,
-      sampleType,
-      selectedItem,
-      imagePath,
-      shutterSpeed,
-      ip;
+  final String userId, sampleType, selectedItem, imagePath, shutterSpeed, ip;
   final Map<String, dynamic>? analysisResult;
 
   const ResultSingle({
     super.key,
     required this.shutterSpeed,
     required this.ip,
-    required this.userName,
-    required this.gender,
+    required this.userId,
     required this.sampleType,
     required this.selectedItem,
-    required this.age,
     required this.imagePath,
     this.analysisResult,
   });
@@ -48,9 +39,7 @@ class _ResultSingleState extends State<ResultSingle> {
     try {
       await store.save(
         shutterSpeed: widget.shutterSpeed,
-        name: widget.userName,
-        age: widget.age,
-        gender: widget.gender,
+        userId: widget.userId,
         item: widget.selectedItem,
         sampleType: widget.sampleType,
         imagePath: widget.imagePath,
@@ -76,7 +65,12 @@ class _ResultSingleState extends State<ResultSingle> {
 
     dynamic findInMap(Map map) {
       if (map.containsKey(key)) return map[key];
-      for (final nestedKey in ['summary', '_history_summary', 'result', 'analysis']) {
+      for (final nestedKey in [
+        'summary',
+        '_history_summary',
+        'result',
+        'analysis',
+      ]) {
         final nested = map[nestedKey];
         if (nested is Map && nested.containsKey(key)) return nested[key];
       }
@@ -131,7 +125,10 @@ class _ResultSingleState extends State<ResultSingle> {
         iconTheme: const IconThemeData(color: Colors.black),
         title: const Text(
           'Test Result',
-          style: TextStyle(color: Color(0xFF1A2A4A), fontWeight: FontWeight.w800),
+          style: TextStyle(
+            color: Color(0xFF1A2A4A),
+            fontWeight: FontWeight.w800,
+          ),
         ),
       ),
       backgroundColor: const Color(0xFFEFF3F8),
@@ -275,7 +272,10 @@ class _ResultSingleState extends State<ResultSingle> {
         _metricTile('T SNR', tSnr?.toStringAsFixed(2) ?? '-'),
         _metricTile('C SNR', cSnr?.toStringAsFixed(2) ?? '-'),
         _metricTile('T/C Ratio', ratio?.toStringAsFixed(3) ?? '-'),
-        _metricTile('Duration', duration == null ? '-' : '${duration.toInt()} ms'),
+        _metricTile(
+          'Duration',
+          duration == null ? '-' : '${duration.toInt()} ms',
+        ),
       ],
     );
   }
@@ -333,8 +333,7 @@ class _ResultSingleState extends State<ResultSingle> {
             ),
           ),
           const SizedBox(height: 14),
-          _infoRow('User ID', widget.userName),
-          _infoRow('Age / Gender', '${widget.age} / ${widget.gender}'),
+          _infoRow('User ID', widget.userId),
           _infoRow('Item', widget.selectedItem),
           _infoRow('Sample Type', widget.sampleType),
           _infoRow('Shutter', widget.shutterSpeed),
@@ -378,7 +377,11 @@ class _ResultSingleState extends State<ResultSingle> {
       decoration: const BoxDecoration(
         color: Colors.white,
         boxShadow: [
-          BoxShadow(blurRadius: 8, color: Colors.black12, offset: Offset(0, -2)),
+          BoxShadow(
+            blurRadius: 8,
+            color: Colors.black12,
+            offset: Offset(0, -2),
+          ),
         ],
       ),
       child: Row(
@@ -395,7 +398,8 @@ class _ResultSingleState extends State<ResultSingle> {
             child: _actionButton(
               text: 'Completed',
               color: const Color(0xFF227BFF),
-              onTap: () => Navigator.popUntil(context, (route) => route.isFirst),
+              onTap:
+                  () => Navigator.popUntil(context, (route) => route.isFirst),
             ),
           ),
         ],
