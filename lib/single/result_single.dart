@@ -154,8 +154,8 @@ class _ResultSingleState extends State<ResultSingle> {
     // final cSnr = _readPathText(['control', 'snr']);
     // final tSnr = _readPathText(['test', 'snr']);
 
-    final cIntensity = _readPathText(['control', 'intensity_fixed_scale']);
-    final tIntensity = _readPathText(['test', 'intensity_fixed_scale']);
+    final cIntensity = _readPathText(['raw_metrics', 'c_int_vs_lod']);
+    final tIntensity = _readPathText(['raw_metrics', 't_int_vs_lod']);
 
     // final c = double.tryParse(cIntensity);
     // final t = double.tryParse(tIntensity);
