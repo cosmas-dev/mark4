@@ -25,7 +25,9 @@ void main() async {
     });
   }
 
-  runApp(MyApp(ip: ip ?? "192.168.0.105"));
+  final resolvedIp = (ip?.trim().isNotEmpty ?? false) ? ip! : "192.168.0.107";
+
+  runApp(MyApp(ip: resolvedIp));
 }
 
 class MyApp extends StatelessWidget {
