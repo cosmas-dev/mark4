@@ -78,10 +78,13 @@ class _RunTestListPageState extends State<RunTestListPage> {
   String buildCsvFromRaw(List<Map<String, dynamic>> rawRows) {
     final buffer = StringBuffer();
 
-    buffer.writeln('Date,UserId,SampleType,Item,Result,CaptureImage');
+    buffer.writeln(
+      'Date,UserId,SampleType,Item,C Intensity,T Intensity,CaptureImage',
+    );
 
     for (final e in rawRows) {
       final createdAt = DateTime.tryParse(e['createdAt']?.toString() ?? '');
+
       final date =
           createdAt == null
               ? ''
@@ -90,13 +93,28 @@ class _RunTestListPageState extends State<RunTestListPage> {
 
       final imagePath = e['imagePath']?.toString() ?? '';
 
+      final analysisResult = e['analysisResult'];
+
+      dynamic cIntensity;
+      dynamic tIntensity;
+
+      if (analysisResult is Map) {
+        final rawMetrics = analysisResult['raw_metrics'];
+
+        if (rawMetrics is Map) {
+          cIntensity = rawMetrics['c_int_vs_lod'];
+          tIntensity = rawMetrics['t_int_vs_lod'];
+        }
+      }
+
       buffer.writeln(
         [
           date,
           e['userId'] ?? '',
           e['sampleType'] ?? '',
           e['item'] ?? '',
-          e['result'] ?? '',
+          cIntensity ?? '',
+          tIntensity ?? '',
           imagePath.isNotEmpty ? 'images/${p.basename(imagePath)}' : '',
         ].map(_csvEscape).join(','),
       );

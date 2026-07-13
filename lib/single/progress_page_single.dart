@@ -818,9 +818,15 @@ class _ProgressPageSingleState extends State<ProgressPageSingle>
     }
   }
 
+  // String _buildResultString() {
+  //   final cIntensity = _readPathText(['control', 'intensity_fixed_scale']);
+  //   final tIntensity = _readPathText(['test', 'intensity_fixed_scale']);
+
+  //   return 'C: $cIntensity / T: $tIntensity';
+  // }
   String _buildResultString() {
-    final cIntensity = _readPathText(['control', 'intensity_fixed_scale']);
-    final tIntensity = _readPathText(['test', 'intensity_fixed_scale']);
+    final cIntensity = _readPathText(['raw_metrics', 'c_int_vs_lod']);
+    final tIntensity = _readPathText(['raw_metrics', 't_int_vs_lod']);
 
     return 'C: $cIntensity / T: $tIntensity';
   }
