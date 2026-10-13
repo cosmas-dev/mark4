@@ -6,7 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:mark4/components/current_time.dart';
 import 'package:mark4/components/window_listener.dart';
 import 'package:mark4/run_test_list_page.dart';
-import 'package:mark4/single/run_test_single.dart';
+import 'package:mark4/single/strip_select_single.dart';
 import 'package:window_manager/window_manager.dart';
 
 class Home extends StatefulWidget {
@@ -410,7 +410,7 @@ class _HomeState extends State<Home> {
                                   context,
                                   MaterialPageRoute(
                                     builder:
-                                        (context) => RunTestSingle(
+                                        (context) => StripSelectPage(
                                           shutterSpeed: shutterValue.toString(),
                                           ip: widget.ip,
                                         ),

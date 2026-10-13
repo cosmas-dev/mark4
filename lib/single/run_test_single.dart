@@ -1,7 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
 import 'dart:math';
-import 'dart:ui';
 import 'package:flutter/material.dart';
 
 import 'package:mark4/components/current_time.dart';
@@ -22,7 +21,6 @@ class RunTestSingle extends StatefulWidget {
 class _RunTestSingleState extends State<RunTestSingle> {
   final _formKey = GlobalKey<FormState>();
   int openClose = 1;
-  bool showPopup = false;
 
   Socket? socket;
   // final String iotDeviceIp = "192.168.0.39";
@@ -41,65 +39,33 @@ class _RunTestSingleState extends State<RunTestSingle> {
       onTap: () {
         FocusScope.of(context).unfocus();
       },
-      child: Stack(
-        children: [
-          // 본 화면
-          Scaffold(
-            backgroundColor: const Color(0xFFEFF3F8),
-            appBar: AppBar(
-              backgroundColor: Colors.transparent,
-              title: Text(
-                "     ${getCurrentTime()}     ${getCurrentDate()}",
-                style: const TextStyle(
-                  fontSize: 30,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              actions: [
-                InkWell(
-                  onTap: () {
-                    Navigator.pop(context);
-                  },
-                  child: Image.asset('images/homeButton.png', scale: 4),
-                ),
-                const SizedBox(width: 20),
-              ],
-            ),
-            body: SafeArea(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  const SizedBox(height: 10),
-                  Center(
-                    child: InkWell(
-                      onTap: () {
-                        setState(() {
-                          showPopup = true;
-                        });
-                      },
-                      child: Image.asset("images/kit1.png", scale: 4),
-                    ),
-                  ),
-                  const Padding(
-                    padding: EdgeInsets.only(bottom: 30),
-                    child: Text(
-                      "Idle",
-                      style: TextStyle(
-                        fontSize: 25,
-                        color: Color(0xFF1A2A4A),
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            bottomNavigationBar: _bottomButtons(),
+      child: Scaffold(
+        backgroundColor: const Color(0xFFEFF3F8),
+        appBar: AppBar(
+          backgroundColor: Colors.transparent,
+          title: Text(
+            "     ${getCurrentTime()}     ${getCurrentDate()}",
+            style: const TextStyle(fontSize: 30, fontWeight: FontWeight.bold),
           ),
-          // 팝업 + 블러
-          if (showPopup) _popupOverlay(),
-        ],
+          actions: [
+            InkWell(
+              onTap: () {
+                Navigator.pop(context);
+              },
+              child: Image.asset('images/homeButton.png', scale: 4),
+            ),
+            const SizedBox(width: 20),
+          ],
+        ),
+        body: SafeArea(
+          child: Center(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.symmetric(vertical: 12),
+              child: _infoForm(),
+            ),
+          ),
+        ),
+        bottomNavigationBar: _bottomButtons(),
       ),
     );
   }
@@ -157,23 +123,23 @@ class _RunTestSingleState extends State<RunTestSingle> {
           Expanded(
             flex: 2,
             child: InkWell(
-              onTap: () {
-                setState(() {
-                  // showPopup = true;
-                  Navigator.pushReplacement(
-                    context,
-                    MaterialPageRoute(
-                      builder:
-                          (context) => PreparingPageSingle(
-                            shutterSpeed: widget.shutterSpeed,
-                            userId: userIdController.text,
-                            sampleType: sampleType ?? "Null",
-                            selectedItem: selectedItem ?? "Null",
-                            ip: widget.ip,
-                          ),
-                    ),
-                  );
-                });
+              onTap: () async {
+                if (!_formKey.currentState!.validate()) return;
+                await _hideLinuxKeyboard();
+                if (!mounted) return;
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(
+                    builder:
+                        (context) => PreparingPageSingle(
+                          shutterSpeed: widget.shutterSpeed,
+                          userId: userIdController.text,
+                          sampleType: sampleType!,
+                          selectedItem: selectedItem!,
+                          ip: widget.ip,
+                        ),
+                  ),
+                );
               },
               child: Container(
                 color: const Color(0xFF227BFF),
@@ -228,29 +194,7 @@ class _RunTestSingleState extends State<RunTestSingle> {
     }
   }
 
-  // ===================== POPUP OVERLAY =====================
-
-  Widget _popupOverlay() {
-    return Positioned.fill(
-      child: AnimatedPadding(
-        duration: const Duration(milliseconds: 50),
-        padding: EdgeInsets.only(
-          bottom: MediaQuery.of(context).viewInsets.bottom * 0.6,
-        ),
-        child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
-          child: Container(
-            color: Colors.black.withAlpha(64),
-            child: Center(
-              child: SingleChildScrollView(child: _popupContent1()),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _popupBtn(String text, VoidCallback onTap) {
+  Widget _formBtn(String text, VoidCallback onTap) {
     return GestureDetector(
       onTap: onTap,
       child: Container(
@@ -277,7 +221,7 @@ class _RunTestSingleState extends State<RunTestSingle> {
     );
   }
 
-  Widget _popupContent1() {
+  Widget _infoForm() {
     return Material(
       color: Colors.transparent,
       child: Form(
@@ -394,17 +338,7 @@ class _RunTestSingleState extends State<RunTestSingle> {
                 child: Row(
                   children: [
                     Expanded(
-                      child: _popupBtn("Apply", () async {
-                        if (!_formKey.currentState!.validate()) {
-                          return; // 🔥 여기서 끝
-                        }
-                        await _hideLinuxKeyboard();
-                        setState(() => showPopup = false);
-                      }),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: _popupBtn("Reset", () async {
+                      child: _formBtn("Reset", () async {
                         await _hideLinuxKeyboard();
                         setState(() {
                           // Form 에러/상태 초기화
@@ -418,13 +352,6 @@ class _RunTestSingleState extends State<RunTestSingle> {
 
                         // (선택) 키보드 내리기
                         FocusScope.of(context).unfocus();
-                      }),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: _popupBtn("Cancel", () async {
-                        await _hideLinuxKeyboard();
-                        setState(() => showPopup = false);
                       }),
                     ),
                   ],
@@ -506,6 +433,7 @@ class _RunTestSingleState extends State<RunTestSingle> {
   Widget _dropdown() {
     return DropdownButtonFormField<String>(
       value: selectedItem,
+      hint: const Text("Select", style: TextStyle(fontSize: 20)),
       validator: (v) {
         if (v == null) return "Item을 선택해주세요";
         return null;

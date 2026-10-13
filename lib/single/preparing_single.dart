@@ -78,70 +78,52 @@ class _PreparingPageSingleState extends State<PreparingPageSingle> {
         ],
       ),
       body: SafeArea(
-        child: SingleChildScrollView(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              const SizedBox(height: 20),
-              Center(
-                child: Container(
-                  width: MediaQuery.sizeOf(context).width * 0.9,
-                  padding: const EdgeInsets.symmetric(
-                    vertical: 25,
-                    horizontal: 20,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(0, 20, 0, 12),
+          child: Center(
+            child: Container(
+              width: MediaQuery.sizeOf(context).width * 0.9,
+              padding: const EdgeInsets.symmetric(vertical: 25, horizontal: 20),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(20),
+                boxShadow: [
+                  BoxShadow(
+                    blurRadius: 10,
+                    color: Colors.black.withAlpha(20),
+                    offset: const Offset(0, 4),
                   ),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(20),
-                    boxShadow: [
-                      BoxShadow(
-                        blurRadius: 10,
-                        // color: Colors.black.withOpacity(0.08),
-                        color: Colors.black.withAlpha(20),
-                        offset: const Offset(0, 4),
-                      ),
-                    ],
-                  ),
-                  child: // ---------- 슬라이드 카드 영역 ----------
-                      SizedBox(
-                    height: 900,
-                    child: Column(
+                ],
+              ),
+              child: Column(
+                children: [
+                  Expanded(
+                    child: PageView(
+                      controller: pageController,
+                      onPageChanged: (i) {
+                        setState(() => currentPage = i);
+                      },
                       children: [
-                        // -------- PageView --------
-                        Expanded(
-                          child: PageView(
-                            controller: pageController,
-                            onPageChanged: (i) {
-                              setState(() => currentPage = i);
-                            },
-                            children: [
-                              _imageGridPage1(),
-                              _imageGridPage2(),
-                              _imageGridPage3(),
-                            ],
-                          ),
-                        ),
-
-                        const SizedBox(height: 12),
-
-                        // -------- Indicator --------
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            _dot(active: currentPage == 0),
-                            const SizedBox(width: 8),
-                            _dot(active: currentPage == 1),
-                            const SizedBox(width: 8),
-                            _dot(active: currentPage == 2),
-                          ],
-                        ),
+                        _imageGridPage1(),
+                        _imageGridPage2(),
+                        SingleChildScrollView(child: _imageGridPage3()),
                       ],
                     ),
                   ),
-                ),
+                  const SizedBox(height: 12),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      _dot(active: currentPage == 0),
+                      const SizedBox(width: 8),
+                      _dot(active: currentPage == 1),
+                      const SizedBox(width: 8),
+                      _dot(active: currentPage == 2),
+                    ],
+                  ),
+                ],
               ),
-            ],
+            ),
           ),
         ),
       ),
@@ -184,7 +166,13 @@ class _PreparingPageSingleState extends State<PreparingPageSingle> {
         //     Expanded(child: _imgBox(number: "④")),
         //   ],
         // ),
-        Image.asset("images/2.png"),
+        Expanded(
+          child: Image.asset(
+            "images/2.png",
+            fit: BoxFit.scaleDown,
+            alignment: Alignment.topLeft,
+          ),
+        ),
       ],
     );
   }
@@ -208,7 +196,15 @@ class _PreparingPageSingleState extends State<PreparingPageSingle> {
           style: TextStyle(fontSize: 30, height: 1.4, color: Color(0xFF1A2A4A)),
         ),
         const SizedBox(height: 25),
-        Center(child: Image.asset('images/4.png', scale: 2.5)),
+        Expanded(
+          child: Center(
+            child: Image.asset(
+              'images/4.png',
+              scale: 2.5,
+              fit: BoxFit.scaleDown,
+            ),
+          ),
+        ),
       ],
     );
   }
