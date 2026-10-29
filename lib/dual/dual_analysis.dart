@@ -65,18 +65,29 @@ String dualResultSummary(Map? result) {
 String dualInvalidMessage(String? reason) {
   switch (reason) {
     case 'CONTROL_NOT_DETECTED':
-      return '대조선(Control)이 검출되지 않았습니다. 재측정해 주세요.';
+      return 'Control line not detected. Check that the reader kit setting matches the cartridge, then retest.';
     case 'DIVIDER_NOT_FOUND':
-      return '카트리지 장착 불량 또는 이물이 의심됩니다. 재장착 후 재측정해 주세요.';
+      return 'Cartridge divider not found. Reinsert the cartridge and retest.';
     case 'ANCHOR_PAIR_MISMATCH':
-      return '좌/우 대조선 높이가 일치하지 않습니다. 재측정해 주세요.';
+      return 'Left and right control lines do not match. Please retest.';
     case 'PROFILE_TOO_NOISY':
-      return '노이즈가 너무 큽니다. 재측정해 주세요.';
+      return 'Signal is too noisy. Please retest.';
     case 'ROI_INVALID':
-      return '분석 영역이 올바르지 않습니다. 재측정해 주세요.';
+      return 'Invalid analysis region. Please retest.';
     case 'ANALYSIS_FAILED':
-      return '분석에 실패했습니다. 장비가 Dual 분석을 지원하는지 확인해 주세요.';
+      return 'Analysis failed. Check that the reader supports this kit.';
     default:
-      return '판정할 수 없습니다. 재측정해 주세요.${reason == null ? '' : ' ($reason)'}';
+      return 'Unable to judge. Please retest.${reason == null ? '' : ' ($reason)'}';
+  }
+}
+
+String dualWarningMessage(Map warning) {
+  final lines = warning['lines'];
+  final names = lines is List ? lines.join(' + ') : '';
+  switch (warning['code']) {
+    case 'CROSSREACT_SUSPECT':
+      return '$names both positive: co-infection, or cross-reaction from the stronger line. Consider a diluted retest.';
+    default:
+      return warning['code']?.toString() ?? '';
   }
 }

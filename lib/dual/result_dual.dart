@@ -100,8 +100,8 @@ class ResultDual extends StatelessWidget {
     final warnings =
         (_verdict['warnings'] is List)
             ? (_verdict['warnings'] as List)
-                .map((w) => w is Map ? w['message']?.toString() : null)
-                .whereType<String>()
+                .whereType<Map>()
+                .map(dualWarningMessage)
                 .toList()
             : <String>[];
 
@@ -140,13 +140,13 @@ class ResultDual extends StatelessWidget {
             Text(
               _hasResult
                   ? dualInvalidMessage(_verdict['reason']?.toString())
-                  : '분석 결과를 받지 못했습니다. 재측정해 주세요.',
+                  : 'No analysis result received. Please retest.',
               style: const TextStyle(color: _navy, fontSize: 28),
             ),
           ] else if (_verdict['coinfection'] == true) ...[
             const SizedBox(height: 14),
             Text(
-              '공동감염 — $nPositive개 항목 양성',
+              'Co-infection: $nPositive positive analytes',
               style: const TextStyle(
                 color: _red,
                 fontSize: 30,
@@ -198,7 +198,7 @@ class ResultDual extends StatelessWidget {
         text = 'Negative';
         color = _gray;
       default:
-        text = '판정 불가';
+        text = 'Invalid';
         color = _amber;
     }
 
@@ -264,7 +264,7 @@ class ResultDual extends StatelessWidget {
                     color: Colors.black,
                     child: Center(
                       child: Text(
-                        'Analysis Plot 없음',
+                        'No analysis plot',
                         style: TextStyle(color: Colors.white),
                       ),
                     ),
