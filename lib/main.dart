@@ -25,7 +25,11 @@ void main() async {
     });
   }
 
-  final resolvedIp = (ip?.trim().isNotEmpty ?? false) ? ip! : "192.168.0.107";
+  // Linux(장비)에서는 앱과 서버가 같은 기기라 loopback으로 접속 (Wi-Fi 불필요)
+  final resolvedIp =
+      Platform.isLinux
+          ? "127.0.0.1"
+          : ((ip?.trim().isNotEmpty ?? false) ? ip! : "192.168.0.107");
 
   runApp(MyApp(ip: resolvedIp));
 }
