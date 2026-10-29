@@ -97,15 +97,6 @@ class ResultDual extends StatelessWidget {
       color = _gray;
     }
 
-    final nPositive = _verdict['n_positive'];
-    final warnings =
-        (_verdict['warnings'] is List)
-            ? (_verdict['warnings'] as List)
-                .whereType<Map>()
-                .map(dualWarningMessage)
-                .toList()
-            : <String>[];
-
     return Container(
       padding: const EdgeInsets.all(22),
       decoration: _cardDecoration(24),
@@ -136,40 +127,6 @@ class ResultDual extends StatelessWidget {
               ),
             ),
           ),
-          if (!_hasResult || _invalid) ...[
-            const SizedBox(height: 14),
-            Text(
-              _hasResult
-                  ? dualInvalidMessage(_verdict['reason']?.toString())
-                  : 'No analysis result received. Please retest.',
-              style: const TextStyle(color: _navy, fontSize: 28),
-            ),
-          ] else if (_verdict['coinfection'] == true) ...[
-            const SizedBox(height: 14),
-            Text(
-              'Co-infection: $nPositive positive analytes',
-              style: const TextStyle(
-                color: _red,
-                fontSize: 30,
-                fontWeight: FontWeight.w800,
-              ),
-            ),
-          ],
-          for (final message in warnings) ...[
-            const SizedBox(height: 12),
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(14),
-              decoration: BoxDecoration(
-                color: const Color(0xFFFFF4DB),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Text(
-                message,
-                style: const TextStyle(color: _navy, fontSize: 24),
-              ),
-            ),
-          ],
         ],
       ),
     );

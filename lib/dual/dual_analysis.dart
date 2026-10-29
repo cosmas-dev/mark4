@@ -61,33 +61,3 @@ String dualResultSummary(Map? result) {
   final coinfection = verdict['coinfection'] == true ? ' (Co-infection)' : '';
   return 'Positive: ${positives.join(', ')}$coinfection';
 }
-
-String dualInvalidMessage(String? reason) {
-  switch (reason) {
-    case 'CONTROL_NOT_DETECTED':
-      return 'Control line not detected. Check that the reader kit setting matches the cartridge, then retest.';
-    case 'DIVIDER_NOT_FOUND':
-      return 'Cartridge divider not found. Reinsert the cartridge and retest.';
-    case 'ANCHOR_PAIR_MISMATCH':
-      return 'Left and right control lines do not match. Please retest.';
-    case 'PROFILE_TOO_NOISY':
-      return 'Signal is too noisy. Please retest.';
-    case 'ROI_INVALID':
-      return 'Invalid analysis region. Please retest.';
-    case 'ANALYSIS_FAILED':
-      return 'Analysis failed. Check that the reader supports this kit.';
-    default:
-      return 'Unable to judge. Please retest.${reason == null ? '' : ' ($reason)'}';
-  }
-}
-
-String dualWarningMessage(Map warning) {
-  final lines = warning['lines'];
-  final names = lines is List ? lines.join(' + ') : '';
-  switch (warning['code']) {
-    case 'CROSSREACT_SUSPECT':
-      return '$names both positive: co-infection, or cross-reaction from the stronger line. Consider a diluted retest.';
-    default:
-      return warning['code']?.toString() ?? '';
-  }
-}

@@ -4,7 +4,6 @@ import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
 import 'package:mark4/DB/run_test_json_store.dart';
-import 'package:mark4/dual/dual_analysis.dart';
 
 class ResultSingle extends StatefulWidget {
   final String userId, sampleType, selectedItem, imagePath, shutterSpeed, ip;
@@ -100,14 +99,6 @@ class _ResultSingleState extends State<ResultSingle> {
     return '-';
   }
 
-  String? _invalidReason() {
-    final verdict = widget.analysisResult?['verdict'];
-    if (verdict is Map && verdict['status'] == 'invalid') {
-      return verdict['reason']?.toString() ?? 'UNKNOWN';
-    }
-    return null;
-  }
-
   Color _detectedColor(String value, bool isTest) {
     if (value == 'Detected') {
       return isTest ? const Color(0xFFE85D5D) : const Color(0xFF227BFF);
@@ -198,21 +189,6 @@ class _ResultSingleState extends State<ResultSingle> {
               fontWeight: FontWeight.w900,
             ),
           ),
-          if (_invalidReason() != null) ...[
-            const SizedBox(height: 14),
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(14),
-              decoration: BoxDecoration(
-                color: const Color(0xFFFFF4DB),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Text(
-                dualInvalidMessage(_invalidReason()),
-                style: const TextStyle(color: Color(0xFF1A2A4A), fontSize: 24),
-              ),
-            ),
-          ],
           const SizedBox(height: 18),
           _ctLineRow(
             label: 'C Line',
