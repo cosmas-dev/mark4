@@ -7,6 +7,7 @@ import 'package:mark4/single/progress_page_single.dart';
 
 class PreparingPageSingle extends StatefulWidget {
   final String userId, sampleType, selectedItem, shutterSpeed, ip;
+  final bool dual;
   const PreparingPageSingle({
     super.key,
     required this.shutterSpeed,
@@ -14,6 +15,7 @@ class PreparingPageSingle extends StatefulWidget {
     required this.sampleType,
     required this.selectedItem,
     required this.ip,
+    this.dual = false,
   });
 
   @override
@@ -271,6 +273,7 @@ class _PreparingPageSingleState extends State<PreparingPageSingle> {
                           sampleType: widget.sampleType,
                           selectedItem: widget.selectedItem,
                           ip: widget.ip,
+                          dual: widget.dual,
                         ),
                   ),
                 );

@@ -4,6 +4,7 @@ class RunTestRow {
   final String userId;
   final String item;
   final String result;
+  final bool isDual;
   bool selected;
 
   RunTestRow({
@@ -12,6 +13,7 @@ class RunTestRow {
     required this.userId,
     required this.item,
     required this.result,
+    this.isDual = false,
     this.selected = false,
   });
 }

@@ -4,6 +4,9 @@ import 'package:flutter/material.dart';
 import 'package:mark4/DB/run_test_json_store.dart';
 import 'package:mark4/DB/run_test_row.dart';
 import 'package:mark4/components/current_time.dart';
+import 'package:mark4/dual/dual_analysis.dart';
+import 'package:mark4/dual/dual_csv.dart';
+import 'package:mark4/dual/result_dual.dart';
 import 'package:mark4/single/result_single.dart';
 import 'package:path/path.dart' as p;
 
@@ -19,6 +22,7 @@ class _RunTestListPageState extends State<RunTestListPage> {
   final store = RunTestJsonStore();
   List<RunTestRow> rows = [];
   bool headerChecked = false;
+  bool showDual = false;
 
   int page = 0;
   final int pageSize = 9;
@@ -123,16 +127,39 @@ class _RunTestListPageState extends State<RunTestListPage> {
     return buffer.toString();
   }
 
+  bool _isDualRaw(Map<String, dynamic> e) {
+    final r = e['analysisResult'];
+    return isDualResult(r is Map ? r : null);
+  }
+
+  String _buildCsv(List<Map<String, dynamic>> raw) =>
+      showDual ? buildDualCsv(raw) : buildCsvFromRaw(raw);
+
+  List<RunTestRow> get visibleRows =>
+      rows.where((r) => r.isDual == showDual).toList();
+
   List<RunTestRow> get pagedRows {
     final start = page * pageSize;
-    return rows.skip(start).take(pageSize).toList();
+    return visibleRows.skip(start).take(pageSize).toList();
+  }
+
+  void _selectTab(bool dual) {
+    if (showDual == dual) return;
+    setState(() {
+      showDual = dual;
+      page = 0;
+      headerChecked = false;
+      for (final row in rows) {
+        row.selected = false;
+      }
+    });
   }
 
   // ---------------- UI ----------------
 
   @override
   Widget build(BuildContext context) {
-    final totalPages = (rows.length / pageSize).ceil().clamp(1, 999);
+    final totalPages = (visibleRows.length / pageSize).ceil().clamp(1, 999);
 
     return Scaffold(
       backgroundColor: const Color(0xFFEFF3F8),
@@ -156,6 +183,10 @@ class _RunTestListPageState extends State<RunTestListPage> {
         children: [
           const SizedBox(height: 8),
 
+          _tabBar(),
+
+          const SizedBox(height: 12),
+
           // ✅ 테이블 카드 (두번째 스샷 핵심)
           Expanded(
             child: Padding(
@@ -176,6 +207,49 @@ class _RunTestListPageState extends State<RunTestListPage> {
         ],
       ),
       bottomNavigationBar: _bottomButtons(),
+    );
+  }
+
+  // ---------------- Single / Dual 탭 ----------------
+
+  Widget _tabBar() {
+    Widget tab(String label, bool dual) {
+      final selected = showDual == dual;
+      return Expanded(
+        child: Material(
+          color: selected ? const Color(0xFF227BFF) : Colors.white,
+          elevation: selected ? 0 : 1,
+          borderRadius: BorderRadius.circular(12),
+          child: InkWell(
+            borderRadius: BorderRadius.circular(12),
+            onTap: () => _selectTab(dual),
+            child: SizedBox(
+              height: 64,
+              child: Center(
+                child: Text(
+                  label,
+                  style: TextStyle(
+                    fontSize: 30,
+                    fontWeight: FontWeight.bold,
+                    color: selected ? Colors.white : const Color(0xFF1A2A4A),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+    }
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 14),
+      child: Row(
+        children: [
+          tab('Single', false),
+          const SizedBox(width: 12),
+          tab('Dual', true),
+        ],
+      ),
     );
   }
 
@@ -201,7 +275,7 @@ class _RunTestListPageState extends State<RunTestListPage> {
 
           Expanded(
             child:
-                rows.isEmpty
+                visibleRows.isEmpty
                     ? const Center(
                       child: Text(
                         'No Data',
@@ -266,23 +340,39 @@ class _RunTestListPageState extends State<RunTestListPage> {
 
         if (data.isEmpty) return;
 
+        final analysisResult =
+            data['analysisResult'] is Map
+                ? Map<String, dynamic>.from(data['analysisResult'])
+                : null;
+
+        if (!mounted) return;
+
         Navigator.push(
           context,
           MaterialPageRoute(
             builder:
-                (_) => ResultSingle(
-                  shutterSpeed: data['shutterSpeed'] ?? '',
-                  userId: data['userId'] ?? '',
-                  sampleType: data['sampleType'] ?? '',
-                  selectedItem: data['item'] ?? '',
-                  imagePath: data['imagePath'] ?? '',
-                  analysisPlotPath: data['analysisPlotPath'],
-                  analysisResult:
-                      data['analysisResult'] is Map
-                          ? Map<String, dynamic>.from(data['analysisResult'])
-                          : null,
-                  ip: '',
-                ),
+                (_) =>
+                    isDualResult(analysisResult)
+                        ? ResultDual(
+                          shutterSpeed: data['shutterSpeed'] ?? '',
+                          userId: data['userId'] ?? '',
+                          sampleType: data['sampleType'] ?? '',
+                          selectedItem: data['item'] ?? '',
+                          imagePath: data['imagePath'] ?? '',
+                          analysisPlotPath: data['analysisPlotPath'],
+                          analysisResult: analysisResult,
+                          ip: '',
+                        )
+                        : ResultSingle(
+                          shutterSpeed: data['shutterSpeed'] ?? '',
+                          userId: data['userId'] ?? '',
+                          sampleType: data['sampleType'] ?? '',
+                          selectedItem: data['item'] ?? '',
+                          imagePath: data['imagePath'] ?? '',
+                          analysisPlotPath: data['analysisPlotPath'],
+                          analysisResult: analysisResult,
+                          ip: '',
+                        ),
           ),
         );
       },
@@ -497,6 +587,7 @@ class _RunTestListPageState extends State<RunTestListPage> {
           // gender: e['gender'] ?? 'Unknown',
           item: e['item'] ?? 'Unknown',
           result: e['result'] ?? '0 ng/mL',
+          isDual: _isDualRaw(e),
         ),
       );
     }
@@ -577,7 +668,10 @@ class _RunTestListPageState extends State<RunTestListPage> {
   //   _showSaveCompletedDialog();
   // }
   Future<void> exportAllToUsb() async {
-    final raw = await store.readAll();
+    final raw =
+        (await store.readAll())
+            .where((e) => _isDualRaw(e) == showDual)
+            .toList();
 
     if (raw.isEmpty) {
       _showSnack('No data to save');
@@ -605,10 +699,10 @@ class _RunTestListPageState extends State<RunTestListPage> {
     }
 
     final csvFile = File(
-      '${exportDir.path}/test_ALL_${DateTime.now().millisecondsSinceEpoch}.csv',
+      '${exportDir.path}/test_${showDual ? 'DUAL_' : ''}ALL_${DateTime.now().millisecondsSinceEpoch}.csv',
     );
 
-    final csv = buildCsvFromRaw(raw);
+    final csv = _buildCsv(raw);
     await csvFile.writeAsString(csv, flush: true);
 
     await _copyImagesToUsb(rawRows: raw, exportDir: exportDir);
@@ -617,7 +711,7 @@ class _RunTestListPageState extends State<RunTestListPage> {
   }
 
   void _confirmExportAll() {
-    if (rows.isEmpty) {
+    if (visibleRows.isEmpty) {
       _showSnack('No data to save');
       return;
     }
@@ -764,7 +858,13 @@ class _RunTestListPageState extends State<RunTestListPage> {
     final raw = await store.readAll();
 
     final selectedRaw =
-        raw.where((e) => selectedIds.contains(e['id']?.toString())).toList();
+        raw
+            .where(
+              (e) =>
+                  selectedIds.contains(e['id']?.toString()) &&
+                  _isDualRaw(e) == showDual,
+            )
+            .toList();
 
     if (selectedRaw.isEmpty) {
       _showSnack('No selected items to save');
@@ -786,10 +886,10 @@ class _RunTestListPageState extends State<RunTestListPage> {
     }
 
     final csvFile = File(
-      '${exportDir.path}/test_SELECTED_${DateTime.now().millisecondsSinceEpoch}.csv',
+      '${exportDir.path}/test_${showDual ? 'DUAL_' : ''}SELECTED_${DateTime.now().millisecondsSinceEpoch}.csv',
     );
 
-    final csv = buildCsvFromRaw(selectedRaw);
+    final csv = _buildCsv(selectedRaw);
     await csvFile.writeAsString(csv, flush: true);
 
     await _copyImagesToUsb(rawRows: selectedRaw, exportDir: exportDir);
@@ -993,7 +1093,9 @@ class _RunTestListPageState extends State<RunTestListPage> {
 
     headerChecked = false; // 추가
 
-    if (page > 0 && (rows.length - ids.length) <= page * pageSize) page = 0;
+    if (page > 0 && (visibleRows.length - ids.length) <= page * pageSize) {
+      page = 0;
+    }
     await _load();
   }
 

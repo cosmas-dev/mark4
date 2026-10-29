@@ -4,14 +4,17 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 
 import 'package:mark4/components/current_time.dart';
+import 'package:mark4/components/select_field.dart';
 import 'package:mark4/single/preparing_single.dart';
 
 class RunTestSingle extends StatefulWidget {
   final String shutterSpeed, ip;
+  final bool dual;
   const RunTestSingle({
     super.key,
     required this.shutterSpeed,
     required this.ip,
+    this.dual = false,
   });
 
   @override
@@ -135,8 +138,9 @@ class _RunTestSingleState extends State<RunTestSingle> {
                           shutterSpeed: widget.shutterSpeed,
                           userId: userIdController.text,
                           sampleType: sampleType!,
-                          selectedItem: selectedItem!,
+                          selectedItem: selectedItem ?? '',
                           ip: widget.ip,
+                          dual: widget.dual,
                         ),
                   ),
                 );
@@ -251,7 +255,7 @@ class _RunTestSingleState extends State<RunTestSingle> {
                   ),
                 ),
                 child: Text(
-                  "CH-1 information",
+                  widget.dual ? "Dual Strip information" : "CH-1 information",
                   style: TextStyle(
                     color: Colors.white,
                     fontSize: 40,
@@ -265,66 +269,17 @@ class _RunTestSingleState extends State<RunTestSingle> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        _label("Sample type *"),
-                        DropdownButtonFormField<String>(
-                          value:
-                              sampleTypeOptions.contains(sampleType)
-                                  ? sampleType
-                                  : null,
-                          hint: Text(
-                            "Select",
-                            style: const TextStyle(fontSize: 20),
-                          ),
-                          validator: (v) {
-                            if (v == null) return "Sample Type을 선택해주세요";
-                            return null;
-                          },
-                          // 🔥 선택된 값 표시용
-                          selectedItemBuilder: (context) {
-                            return sampleTypeOptions.map((e) {
-                              return Align(
-                                alignment: Alignment.centerLeft,
-                                child: Text(
-                                  e,
-                                  style: const TextStyle(
-                                    fontSize: 40,
-                                    height: 0.5, // 👈 중요
-                                  ),
-                                ),
-                              );
-                            }).toList();
-                          },
-                          items:
-                              sampleTypeOptions
-                                  .map(
-                                    (e) => DropdownMenuItem(
-                                      value: e,
-                                      child: Text(
-                                        e,
-                                        style: const TextStyle(fontSize: 40),
-                                      ),
-                                    ),
-                                  )
-                                  .toList(),
-                          onChanged: (v) {
-                            setState(() {
-                              sampleType = v;
-                            });
-                          },
-                          decoration: _dropdownDecoration().copyWith(
-                            contentPadding: EdgeInsets.symmetric(
-                              vertical: 20,
-                              horizontal: 12,
-                            ),
-                          ),
-                        ),
-                      ],
+                    _label("Sample type *"),
+                    SelectField(
+                      options: sampleTypeOptions,
+                      value: sampleType,
+                      validator: (v) {
+                        if (v == null) return "Sample Type을 선택해주세요";
+                        return null;
+                      },
+                      onChanged: (v) => setState(() => sampleType = v),
                     ),
-                    _label("Item"),
-                    _dropdown(),
+                    if (!widget.dual) ...[_label("Item"), _dropdown()],
 
                     _label("User ID *"),
                     _input(userIdController),
@@ -341,14 +296,14 @@ class _RunTestSingleState extends State<RunTestSingle> {
                       child: _formBtn("Reset", () async {
                         await _hideLinuxKeyboard();
                         setState(() {
-                          // Form 에러/상태 초기화
-                          _formKey.currentState?.reset();
-
-                          // 현재 채널 값 초기화
                           userIdController.clear();
                           selectedItem = null;
                           sampleType = null;
                         });
+                        // 값이 비워진 뒤에 폼을 리셋해야 선택 필드가 초기값(null)으로 돌아감
+                        WidgetsBinding.instance.addPostFrameCallback(
+                          (_) => _formKey.currentState?.reset(),
+                        );
 
                         // (선택) 키보드 내리기
                         FocusScope.of(context).unfocus();
@@ -364,21 +319,6 @@ class _RunTestSingleState extends State<RunTestSingle> {
     );
   }
 
-  InputDecoration _dropdownDecoration() {
-    return InputDecoration(
-      contentPadding: const EdgeInsets.symmetric(horizontal: 12),
-      border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-      enabledBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(8),
-        borderSide: const BorderSide(color: Colors.black12),
-      ),
-      focusedBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(8),
-        borderSide: const BorderSide(color: Colors.blue),
-      ),
-    );
-  }
-
   Widget _label(String text) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 6, top: 14),
@@ -387,29 +327,31 @@ class _RunTestSingleState extends State<RunTestSingle> {
   }
 
   Widget _input(TextEditingController c, {bool isNumber = false}) {
-    return SizedBox(
-      height: 70,
-      child: TextFormField(
-        controller: c,
-        keyboardType: isNumber ? TextInputType.number : TextInputType.text,
-        textInputAction: TextInputAction.done,
-        onTap: () async {
-          await _showLinuxKeyboard();
-        },
-        validator: (v) {
-          if (v == null || v.trim().isEmpty) {
-            return "User ID를 입력해주세요";
-          }
-          return null;
-        },
-        style: const TextStyle(fontSize: 35),
-        decoration: InputDecoration(
-          contentPadding: const EdgeInsets.symmetric(
-            horizontal: 12,
-            vertical: 18,
-          ),
-          border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+    return TextFormField(
+      controller: c,
+      keyboardType: isNumber ? TextInputType.number : TextInputType.text,
+      textInputAction: TextInputAction.done,
+      onTap: () async {
+        await _showLinuxKeyboard();
+      },
+      validator: (v) {
+        if (v == null || v.trim().isEmpty) {
+          return "User ID를 입력해주세요";
+        }
+        return null;
+      },
+      style: const TextStyle(fontSize: 35, height: 1.2),
+      strutStyle: const StrutStyle(
+        fontSize: 35,
+        height: 1.2,
+        forceStrutHeight: true,
+      ),
+      decoration: InputDecoration(
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 12,
+          vertical: 14,
         ),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
       ),
     );
   }
@@ -431,58 +373,14 @@ class _RunTestSingleState extends State<RunTestSingle> {
   }
 
   Widget _dropdown() {
-    return DropdownButtonFormField<String>(
+    return SelectField(
+      options: itemOptions,
       value: selectedItem,
-      hint: const Text("Select", style: TextStyle(fontSize: 20)),
       validator: (v) {
         if (v == null) return "Item을 선택해주세요";
         return null;
       },
-      // 🔥 선택된 값 표시용
-      selectedItemBuilder: (context) {
-        return itemOptions.map((e) {
-          return Align(
-            alignment: Alignment.centerLeft,
-            child: Text(
-              e,
-              style: const TextStyle(
-                fontSize: 40,
-                height: 0.5, // 👈 중요
-              ),
-            ),
-          );
-        }).toList();
-      },
-      items:
-          itemOptions
-              .map(
-                (e) => DropdownMenuItem<String>(
-                  value: e,
-                  child: Text(e, style: const TextStyle(fontSize: 40)),
-                ),
-              )
-              .toList(),
-      onChanged: (v) {
-        setState(() {
-          selectedItem = v;
-        });
-      },
-      decoration: InputDecoration(
-        contentPadding: const EdgeInsets.symmetric(
-          vertical: 20,
-          horizontal: 12,
-        ),
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(8),
-          borderSide: const BorderSide(color: Colors.black12),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(8),
-          borderSide: const BorderSide(color: Colors.blue),
-        ),
-      ),
-      icon: const Icon(Icons.arrow_drop_down),
+      onChanged: (v) => setState(() => selectedItem = v),
     );
   }
 

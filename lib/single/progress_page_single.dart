@@ -396,11 +396,14 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:mark4/DB/run_test_json_store.dart';
 import 'package:mark4/components/time_set.dart';
+import 'package:mark4/dual/dual_analysis.dart';
+import 'package:mark4/dual/result_dual.dart';
 import 'package:mark4/single/result_single.dart';
 import 'package:path_provider/path_provider.dart';
 
 class ProgressPageSingle extends StatefulWidget {
   final String userId, sampleType, selectedItem, shutterSpeed, ip;
+  final bool dual;
 
   const ProgressPageSingle({
     super.key,
@@ -409,6 +412,7 @@ class ProgressPageSingle extends StatefulWidget {
     required this.sampleType,
     required this.selectedItem,
     required this.ip,
+    this.dual = false,
   });
 
   @override
@@ -422,6 +426,7 @@ class _ProgressPageSingleState extends State<ProgressPageSingle>
 
   Socket? socket;
   final List<int> _buffer = [];
+  final Map<String, Completer<dynamic>> _pending = {};
 
   String? _imagePath;
   String? _analysisPlotPath;
@@ -539,6 +544,42 @@ class _ProgressPageSingleState extends State<ProgressPageSingle>
     await currentSocket.flush();
   }
 
+  Future<dynamic> _request(
+    String header,
+    String cmd,
+    Object data, {
+    Duration timeout = const Duration(seconds: 3),
+  }) async {
+    final key = '$header/$cmd';
+    final completer = Completer<dynamic>();
+    _pending[key] = completer;
+    await _sendCommand(header: header, cmd: cmd, data: data);
+    try {
+      return await completer.future.timeout(timeout);
+    } on TimeoutException {
+      return null;
+    } finally {
+      _pending.remove(key);
+    }
+  }
+
+  // 장비는 활성 키트로 분석기를 고른다: *_line_v1 = Single, *_multi_dual7_v1 = Dual.
+  // 내부용(gmd_) / 외부공개용(lod025_) 정책은 현재 활성 키트를 그대로 따른다.
+  Future<void> _ensureKit() async {
+    final active = await _request('E001', 'KIT_GET_ACTIVE', '');
+    final activeId = active is Map ? active['active_kit_id']?.toString() : null;
+
+    if (activeId != null && activeId.contains('dual') == widget.dual) return;
+
+    final publicRelease = activeId?.startsWith('lod025') ?? false;
+    final prefix = publicRelease ? 'lod025' : 'gmd';
+    final target =
+        widget.dual ? '${prefix}_multi_dual7_v1' : '${prefix}_line_v1';
+
+    final result = await _request('E001', 'KIT_SET_ACTIVE', target);
+    debugPrint('KIT_SET_ACTIVE $target -> $result');
+  }
+
   Future<void> captureImageFromIoT() async {
     try {
       socket = await Socket.connect(widget.ip, 9191);
@@ -552,6 +593,8 @@ class _ProgressPageSingleState extends State<ProgressPageSingle>
         onError: (error) => debugPrint("Socket error: $error"),
         onDone: () => debugPrint("Socket closed"),
       );
+
+      await _ensureKit();
 
       final shutter = int.tryParse(widget.shutterSpeed.trim());
       if (shutter != null && shutter > 0) {
@@ -651,6 +694,12 @@ class _ProgressPageSingleState extends State<ProgressPageSingle>
 
     debugPrint('RECV JSON -> header=$header cmd=$cmd data=$data');
 
+    final pending = _pending.remove('$header/$cmd');
+    if (pending != null && !pending.isCompleted) {
+      pending.complete(data);
+      return;
+    }
+
     if (header == 'ANALYSIS_DONE') {
       _analysisResult = _normalizeAnalysisData(data);
       if (_runCompleted) {
@@ -669,11 +718,11 @@ class _ProgressPageSingleState extends State<ProgressPageSingle>
     if (header == 'A001' && cmd == 'RUN') {
       _runCompleted = true;
 
-      if (data.toString().contains('Capture Complete')) {
-        _requestAnalysisPlot();
-      }
+      // 분석 PNG는 ANALYSIS_DONE 이후에만 요청해야 그 측정의 그림을 받는다.
+      _navigateIfReady();
 
-      _fallbackTimer ??= Timer(const Duration(seconds: 5), () async {
+      // ANALYSIS_DONE 은 PNG 렌더링 때문에 최대 8초 가량 걸릴 수 있다 (문서 권장 15초 이상).
+      _fallbackTimer ??= Timer(const Duration(seconds: 20), () async {
         if (_hasNavigated || _analysisResult != null) return;
         await _sendCommand(header: 'E001', cmd: 'ANALYSIS_GET_LAST', data: '');
         Timer(const Duration(seconds: 2), () => _navigateIfReady(force: true));
@@ -780,20 +829,34 @@ class _ProgressPageSingleState extends State<ProgressPageSingle>
 
     if (!mounted) return;
 
+    final dualResult = isDualResult(_analysisResult);
+
     Navigator.pushReplacement(
       context,
       MaterialPageRoute(
         builder:
-            (context) => ResultSingle(
-              shutterSpeed: widget.shutterSpeed,
-              userId: widget.userId,
-              sampleType: widget.sampleType,
-              selectedItem: widget.selectedItem,
-              imagePath: _imagePath!,
-              analysisPlotPath: _analysisPlotPath,
-              ip: widget.ip,
-              analysisResult: _analysisResult,
-            ),
+            (context) =>
+                dualResult
+                    ? ResultDual(
+                      shutterSpeed: widget.shutterSpeed,
+                      userId: widget.userId,
+                      sampleType: widget.sampleType,
+                      selectedItem: widget.selectedItem,
+                      imagePath: _imagePath!,
+                      analysisPlotPath: _analysisPlotPath,
+                      ip: widget.ip,
+                      analysisResult: _analysisResult,
+                    )
+                    : ResultSingle(
+                      shutterSpeed: widget.shutterSpeed,
+                      userId: widget.userId,
+                      sampleType: widget.sampleType,
+                      selectedItem: widget.selectedItem,
+                      imagePath: _imagePath!,
+                      analysisPlotPath: _analysisPlotPath,
+                      ip: widget.ip,
+                      analysisResult: _analysisResult,
+                    ),
       ),
     );
   }
@@ -825,6 +888,8 @@ class _ProgressPageSingleState extends State<ProgressPageSingle>
   //   return 'C: $cIntensity / T: $tIntensity';
   // }
   String _buildResultString() {
+    if (isDualResult(_analysisResult)) return dualResultSummary(_analysisResult);
+
     final cIntensity = _readPathText(['raw_metrics', 'c_int_vs_lod']);
     final tIntensity = _readPathText(['raw_metrics', 't_int_vs_lod']);
 

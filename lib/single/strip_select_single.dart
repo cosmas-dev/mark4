@@ -21,23 +21,14 @@ class StripSelectPage extends StatelessWidget {
     );
   }
 
-  void _showComingSoon(BuildContext context) {
-    showDialog<void>(
-      context: context,
-      builder:
-          (context) => AlertDialog(
-            title: const Text(
-              "Dual Strip",
-              style: TextStyle(fontSize: 36, fontWeight: FontWeight.bold),
-            ),
-            content: const Text("준비 중입니다.", style: TextStyle(fontSize: 30)),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context),
-                child: const Text("OK", style: TextStyle(fontSize: 30)),
-              ),
-            ],
-          ),
+  void _selectDual(BuildContext context) {
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(
+        builder:
+            (context) =>
+                RunTestSingle(shutterSpeed: shutterSpeed, ip: ip, dual: true),
+      ),
     );
   }
 
@@ -83,7 +74,7 @@ class StripSelectPage extends StatelessWidget {
               _stripButton(
                 label: "Dual Strip",
                 colors: const [Color(0xFF33D2C5), Color(0xFF28B6A7)],
-                onTap: () => _showComingSoon(context),
+                onTap: () => _selectDual(context),
               ),
             ],
           ),
