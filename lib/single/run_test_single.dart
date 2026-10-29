@@ -29,6 +29,28 @@ class _RunTestSingleState extends State<RunTestSingle> {
   // final String iotDeviceIp = "192.168.0.39";
 
   final TextEditingController userIdController = TextEditingController();
+  final FocusNode _userIdFocus = FocusNode();
+
+  @override
+  void initState() {
+    super.initState();
+    _userIdFocus.addListener(_onUserIdFocusChanged);
+  }
+
+  @override
+  void dispose() {
+    _userIdFocus.dispose();
+    _hideLinuxKeyboard();
+    super.dispose();
+  }
+
+  void _onUserIdFocusChanged() {
+    if (_userIdFocus.hasFocus) {
+      _showLinuxKeyboard(restart: true);
+    } else {
+      _hideLinuxKeyboard();
+    }
+  }
 
   String? selectedItem;
   String? sampleType;
@@ -329,6 +351,7 @@ class _RunTestSingleState extends State<RunTestSingle> {
   Widget _input(TextEditingController c, {bool isNumber = false}) {
     return TextFormField(
       controller: c,
+      focusNode: _userIdFocus,
       keyboardType: isNumber ? TextInputType.number : TextInputType.text,
       textInputAction: TextInputAction.done,
       onTap: () async {
@@ -356,8 +379,17 @@ class _RunTestSingleState extends State<RunTestSingle> {
     );
   }
 
-  Future<void> _showLinuxKeyboard() async {
+  // 화면 키보드(squeekboard)는 포커스를 얻을 때 새로 띄우고, 포커스를 잃거나 화면을 나갈 때 종료한다.
+  Future<void> _showLinuxKeyboard({bool restart = false}) async {
+    if (!Platform.isLinux) return;
     try {
+      if (restart) {
+        await _hideLinuxKeyboard();
+        await Future.delayed(const Duration(milliseconds: 100));
+      } else {
+        final running = await Process.run('pgrep', ['-x', 'squeekboard']);
+        if (running.exitCode == 0) return;
+      }
       await Process.start('squeekboard', [], mode: ProcessStartMode.detached);
     } catch (e) {
       debugPrint('squeekboard 실행 실패: $e');
@@ -365,6 +397,7 @@ class _RunTestSingleState extends State<RunTestSingle> {
   }
 
   Future<void> _hideLinuxKeyboard() async {
+    if (!Platform.isLinux) return;
     for (final name in ['onboard', 'matchbox-keyboard', 'squeekboard']) {
       try {
         await Process.run('pkill', [name]);
