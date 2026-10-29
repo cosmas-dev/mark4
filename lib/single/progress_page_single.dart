@@ -400,6 +400,7 @@ import 'package:mark4/dual/dual_analysis.dart';
 import 'package:mark4/dual/result_dual.dart';
 import 'package:mark4/single/result_single.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class ProgressPageSingle extends StatefulWidget {
   final String userId, sampleType, selectedItem, shutterSpeed, ip;
@@ -427,6 +428,7 @@ class _ProgressPageSingleState extends State<ProgressPageSingle>
   Socket? socket;
   final List<int> _buffer = [];
   final Map<String, Completer<dynamic>> _pending = {};
+  static const _lastSingleKitKey = 'last_single_kit_id';
 
   String? _imagePath;
   String? _analysisPlotPath;
@@ -568,13 +570,25 @@ class _ProgressPageSingleState extends State<ProgressPageSingle>
   Future<void> _ensureKit() async {
     final active = await _request('E001', 'KIT_GET_ACTIVE', '');
     final activeId = active is Map ? active['active_kit_id']?.toString() : null;
+    final prefs = await SharedPreferences.getInstance();
 
-    if (activeId != null && activeId.contains('dual') == widget.dual) return;
+    if (activeId != null && activeId.contains('dual') == widget.dual) {
+      if (!widget.dual) await prefs.setString(_lastSingleKitKey, activeId);
+      return;
+    }
 
     final publicRelease = activeId?.startsWith('lod025') ?? false;
     final prefix = publicRelease ? 'lod025' : 'gmd';
+
+    // Dual 로 넘어가기 전에 쓰던 Single 키트(line/spot 등)를 기억했다가 되돌릴 때 복원한다.
+    if (widget.dual && activeId != null) {
+      await prefs.setString(_lastSingleKitKey, activeId);
+    }
+
     final target =
-        widget.dual ? '${prefix}_multi_dual7_v1' : '${prefix}_line_v1';
+        widget.dual
+            ? '${prefix}_multi_dual7_v1'
+            : (prefs.getString(_lastSingleKitKey) ?? '${prefix}_line_v1');
 
     final result = await _request('E001', 'KIT_SET_ACTIVE', target);
     debugPrint('KIT_SET_ACTIVE $target -> $result');
