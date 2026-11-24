@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:mark4/DB/csv_chunks.dart';
 import 'package:mark4/DB/run_test_json_store.dart';
 import 'package:mark4/DB/run_test_row.dart';
 import 'package:mark4/components/current_time.dart';
@@ -127,6 +128,25 @@ class _RunTestListPageState extends State<RunTestListPage> {
 
   String _buildCsv(List<Map<String, dynamic>> raw) =>
       showDual ? buildDualCsv(raw) : buildCsvFromRaw(raw);
+
+  /// 오래된 순으로 [csvMaxRows]개씩 나눠 CSV를 저장한다.
+  /// 한 파일로 충분하면 기존 파일명 그대로, 여러 개면 _part01, _part02 ... 를 붙인다.
+  Future<void> _writeCsvFiles({
+    required Directory exportDir,
+    required String baseName,
+    required List<Map<String, dynamic>> raw,
+  }) async {
+    final chunks = splitRowsForCsv(raw);
+
+    for (var i = 0; i < chunks.length; i++) {
+      final suffix =
+          chunks.length == 1
+              ? ''
+              : '_part${(i + 1).toString().padLeft(2, '0')}';
+      final file = File('${exportDir.path}/$baseName$suffix.csv');
+      await file.writeAsString(_buildCsv(chunks[i]), flush: true);
+    }
+  }
 
   List<RunTestRow> get visibleRows =>
       rows.where((r) => r.isDual == showDual).toList();
@@ -677,12 +697,6 @@ class _RunTestListPageState extends State<RunTestListPage> {
       return;
     }
 
-    raw.sort(
-      (a, b) => DateTime.parse(
-        b['createdAt'],
-      ).compareTo(DateTime.parse(a['createdAt'])),
-    );
-
     final exportName = 'COSMAS';
 
     final exportDir = Directory('${usbDir.path}/$exportName');
@@ -691,12 +705,12 @@ class _RunTestListPageState extends State<RunTestListPage> {
       await exportDir.create(recursive: true);
     }
 
-    final csvFile = File(
-      '${exportDir.path}/test_${showDual ? 'DUAL_' : ''}ALL_${DateTime.now().millisecondsSinceEpoch}.csv',
+    await _writeCsvFiles(
+      exportDir: exportDir,
+      baseName:
+          'test_${showDual ? 'DUAL_' : ''}ALL_${DateTime.now().millisecondsSinceEpoch}',
+      raw: raw,
     );
-
-    final csv = _buildCsv(raw);
-    await csvFile.writeAsString(csv, flush: true);
 
     await _copyImagesToUsb(rawRows: raw, exportDir: exportDir);
 
@@ -864,12 +878,6 @@ class _RunTestListPageState extends State<RunTestListPage> {
       return;
     }
 
-    selectedRaw.sort(
-      (a, b) => DateTime.parse(
-        b['createdAt'],
-      ).compareTo(DateTime.parse(a['createdAt'])),
-    );
-
     final exportName = 'COSMAS';
 
     final exportDir = Directory('${usbDir.path}/$exportName');
@@ -878,12 +886,12 @@ class _RunTestListPageState extends State<RunTestListPage> {
       await exportDir.create(recursive: true);
     }
 
-    final csvFile = File(
-      '${exportDir.path}/test_${showDual ? 'DUAL_' : ''}SELECTED_${DateTime.now().millisecondsSinceEpoch}.csv',
+    await _writeCsvFiles(
+      exportDir: exportDir,
+      baseName:
+          'test_${showDual ? 'DUAL_' : ''}SELECTED_${DateTime.now().millisecondsSinceEpoch}',
+      raw: selectedRaw,
     );
-
-    final csv = _buildCsv(selectedRaw);
-    await csvFile.writeAsString(csv, flush: true);
 
     await _copyImagesToUsb(rawRows: selectedRaw, exportDir: exportDir);
 

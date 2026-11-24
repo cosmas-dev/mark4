@@ -145,8 +145,44 @@ class RunTestJsonStore {
 
     // await _writeAll(rows);
 
+    await _pruneOldImages(rows);
+
     final file = await _file();
     await file.writeAsString(jsonEncode(rows), flush: true);
+  }
+
+  /// 이미지(촬영 이미지 + 분석 plot)를 보관하는 검사 기록의 최대 개수.
+  static const maxStoredImages = 300;
+
+  /// rows는 저장 순서(오래된 것 → 최신)로 쌓여 있다.
+  /// 이미지가 있는 기록이 [maxStoredImages]개를 넘으면 가장 오래된 기록부터
+  /// 이미지 파일을 삭제하고 경로를 비운다. 검사 기록(수치/판정)은 그대로 남는다.
+  Future<void> _pruneOldImages(List<Map<String, dynamic>> rows) async {
+    bool hasImage(Map<String, dynamic> e) {
+      final path = e['imagePath'];
+      return path is String && path.isNotEmpty;
+    }
+
+    final withImage = rows.where(hasImage).toList();
+    final excess = withImage.length - maxStoredImages;
+    if (excess <= 0) return;
+
+    Future<void> deleteFilePath(dynamic pathValue) async {
+      if (pathValue is! String || pathValue.isEmpty) return;
+      final file = File(pathValue);
+      try {
+        if (await file.exists()) await file.delete();
+      } catch (_) {
+        // 파일 삭제 실패 시에도 기록 정리는 계속 진행
+      }
+    }
+
+    for (final e in withImage.take(excess)) {
+      await deleteFilePath(e['imagePath']);
+      await deleteFilePath(e['analysisPlotPath']);
+      e['imagePath'] = '';
+      e['analysisPlotPath'] = null;
+    }
   }
 
   // Future<void> deleteByIds(List<String> ids) async {
