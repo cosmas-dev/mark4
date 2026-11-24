@@ -4,6 +4,7 @@ import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
 import 'package:mark4/DB/run_test_json_store.dart';
+import 'package:mark4/single/single_analysis.dart';
 
 class ResultSingle extends StatefulWidget {
   final String userId, sampleType, selectedItem, imagePath, shutterSpeed, ip;
@@ -79,17 +80,6 @@ class _ResultSingleState extends State<ResultSingle> {
     return node;
   }
 
-  String _readPathText(List<String> path) {
-    final value = _lookupPath(path);
-    if (value == null) return '-';
-
-    if (value is num) {
-      return value.toStringAsFixed(value % 1 == 0 ? 0 : 2);
-    }
-
-    return value.toString();
-  }
-
   String _readDetected(List<String> path) {
     final value = _lookupPath(path);
 
@@ -97,13 +87,6 @@ class _ResultSingleState extends State<ResultSingle> {
     if (value == false) return 'Not Detected';
 
     return '-';
-  }
-
-  Color _detectedColor(String value, bool isTest) {
-    if (value == 'Detected') {
-      return isTest ? const Color(0xFFE85D5D) : const Color(0xFF227BFF);
-    }
-    return const Color(0xFF6B6B6B);
   }
 
   @override
@@ -131,9 +114,7 @@ class _ResultSingleState extends State<ResultSingle> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    _ctResultCard(),
-                    const SizedBox(height: 16),
-                    _capturedImageWithAnalysisRoi(),
+                    _resultCard(),
                     const SizedBox(height: 16),
                     _patientCard(),
                   ],
@@ -147,23 +128,14 @@ class _ResultSingleState extends State<ResultSingle> {
     );
   }
 
-  Widget _ctResultCard() {
-    final cDetected = _readDetected(['control', 'detected']);
-    final tDetected = _readDetected(['test', 'detected']);
+  static const _red = Color(0xFFE85D5D);
+  static const _gray = Color(0xFF6B6B6B);
+  static const _amber = Color(0xFFF5A623);
 
-    // final cSnr = _readPathText(['control', 'snr']);
-    // final tSnr = _readPathText(['test', 'snr']);
-
-    final cIntensity = _readPathText(['raw_metrics', 'c_int_vs_lod']);
-    final tIntensity = _readPathText(['raw_metrics', 't_int_vs_lod']);
-
-    // final c = double.tryParse(cIntensity);
-    // final t = double.tryParse(tIntensity);
-    // final ratio =
-    //     (c != null && t != null && t != 0) ? (c / t).toStringAsFixed(2) : '-';
-
-    // final cY = _readPathText(['control', 'y_px_r_only']);
-    // final tY = _readPathText(['test', 'y_px_r_only']);
+  Widget _resultCard() {
+    final label = singleVerdict(widget.analysisResult).toUpperCase();
+    final color =
+        label == 'POSITIVE' ? _red : (label == 'NEGATIVE' ? _gray : _amber);
 
     return Container(
       padding: const EdgeInsets.all(22),
@@ -182,7 +154,7 @@ class _ResultSingleState extends State<ResultSingle> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const Text(
-            'C / T Line Result',
+            'Single Strip Result',
             style: TextStyle(
               color: Color(0xFF1A2A4A),
               fontSize: 38,
@@ -190,190 +162,45 @@ class _ResultSingleState extends State<ResultSingle> {
             ),
           ),
           const SizedBox(height: 18),
-          _ctLineRow(
-            label: 'C Line',
-            detected: cDetected,
-            intensity: cIntensity,
-            color: _detectedColor(cDetected, false),
-          ),
-          const SizedBox(height: 14),
-          _ctLineRow(
-            label: 'T Line',
-            detected: tDetected,
-            intensity: tIntensity,
-            color: _detectedColor(tDetected, true),
-          ),
-          const SizedBox(height: 14),
-          // Container(
-          //   padding: const EdgeInsets.all(18),
-          //   decoration: BoxDecoration(
-          //     color: const Color(0xFFEFF3F8),
-          //     borderRadius: BorderRadius.circular(18),
-          //   ),
-          //   child: Row(
-          //     children: [
-          //       SizedBox(
-          //         width: 200,
-          //         child: Text(
-          //           'C/T Ratio',
-          //           style: TextStyle(
-          //             color: Colors.black,
-          //             fontSize: 36,
-          //             fontWeight: FontWeight.w900,
-          //           ),
-          //         ),
-          //       ),
-          //       Expanded(
-          //         child: Column(
-          //           crossAxisAlignment: CrossAxisAlignment.start,
-          //           children: [
-          //             Text(
-          //               'Ratio: $ratio',
-          //               style: const TextStyle(
-          //                 color: Color(0xFF1A2A4A),
-          //                 fontSize: 28,
-          //                 fontWeight: FontWeight.w600,
-          //               ),
-          //             ),
-          //           ],
-          //         ),
-          //       ),
-          //     ],
-          //   ),
-          // ),
-        ],
-      ),
-    );
-  }
-
-  Widget _ctLineRow({
-    required String label,
-    required String detected,
-    required String intensity,
-    required Color color,
-  }) {
-    return Container(
-      padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(
-        color: const Color(0xFFEFF3F8),
-        borderRadius: BorderRadius.circular(18),
-      ),
-      child: Row(
-        children: [
-          SizedBox(
-            width: 200,
-            child: Text(
-              label,
-              style: TextStyle(
-                color: color,
-                fontSize: 36,
-                fontWeight: FontWeight.w900,
-              ),
-            ),
-          ),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
+          Wrap(
+            crossAxisAlignment: WrapCrossAlignment.center,
+            spacing: 18,
+            runSpacing: 10,
+            children: [
+              if (widget.selectedItem.isNotEmpty)
                 Text(
-                  detected,
-                  style: TextStyle(
-                    color: color,
-                    fontSize: 34,
-                    fontWeight: FontWeight.w800,
-                  ),
-                ),
-                const SizedBox(height: 6),
-                Text(
-                  'Intensity: $intensity',
+                  widget.selectedItem,
                   style: const TextStyle(
                     color: Color(0xFF1A2A4A),
-                    fontSize: 28,
-                    fontWeight: FontWeight.w600,
+                    fontSize: 38,
+                    fontWeight: FontWeight.w900,
                   ),
                 ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _capturedImageWithAnalysisRoi() {
-    const imageHeight = 360.0;
-
-    final plotPath = widget.analysisPlotPath;
-    final hasAnalysisPlot =
-        plotPath != null && plotPath.isNotEmpty && File(plotPath).existsSync();
-
-    return Container(
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(22),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withAlpha(16),
-            blurRadius: 12,
-            offset: const Offset(0, 5),
-          ),
-        ],
-      ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(16),
-        child: SizedBox(
-          width: double.infinity,
-          height: imageHeight,
-          child: Row(
-            children: [
-              Expanded(
-                child: ClipRRect(
-                  borderRadius: const BorderRadius.only(
-                    topLeft: Radius.circular(16),
-                    bottomLeft: Radius.circular(16),
-                  ),
-                  child: CenterCroppedFileImage(
-                    imagePath: widget.imagePath,
-                    cropWidthRatio: 0.08,
-                    cropHeightRatio: 0.30,
-                    cropCenterYRatio: 0.55,
-                  ),
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 22,
+                  vertical: 12,
                 ),
-              ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: ClipRRect(
-                  borderRadius: const BorderRadius.only(
-                    topRight: Radius.circular(16),
-                    bottomRight: Radius.circular(16),
+                decoration: BoxDecoration(
+                  color: color,
+                  borderRadius: BorderRadius.circular(14),
+                ),
+                child: Text(
+                  label,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 38,
+                    fontWeight: FontWeight.w900,
                   ),
-                  child:
-                      hasAnalysisPlot
-                          ? AnalysisPlotRoiCropImage(
-                            imagePath: plotPath,
-                            srcLeftRatio: 0.10,
-                            srcTopRatio: 0.10,
-                            srcWidthRatio: 0.24,
-                            srcHeightRatio: 0.45,
-                          )
-                          : const ColoredBox(
-                            color: Colors.black,
-                            child: Center(
-                              child: Text(
-                                'Analysis Plot 없음',
-                                style: TextStyle(color: Colors.white),
-                              ),
-                            ),
-                          ),
                 ),
               ),
             ],
           ),
-        ),
+        ],
       ),
     );
   }
+
   // Widget _capturedImageWithAnalysisRoi() {
   //   const imageHeight = 360.0;
 

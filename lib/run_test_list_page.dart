@@ -8,6 +8,7 @@ import 'package:mark4/dual/dual_analysis.dart';
 import 'package:mark4/dual/dual_csv.dart';
 import 'package:mark4/dual/result_dual.dart';
 import 'package:mark4/single/result_single.dart';
+import 'package:mark4/single/single_analysis.dart';
 import 'package:path/path.dart' as p;
 
 class RunTestListPage extends StatefulWidget {
@@ -83,7 +84,7 @@ class _RunTestListPageState extends State<RunTestListPage> {
     final buffer = StringBuffer();
 
     buffer.writeln(
-      'Date,UserId,SampleType,Item,C Intensity,T Intensity,CaptureImage',
+      'Date,UserId,SampleType,Item,C Intensity,T Intensity,Result,CaptureImage',
     );
 
     for (final e in rawRows) {
@@ -99,17 +100,8 @@ class _RunTestListPageState extends State<RunTestListPage> {
 
       final analysisResult = e['analysisResult'];
 
-      dynamic cIntensity;
-      dynamic tIntensity;
-
-      if (analysisResult is Map) {
-        final rawMetrics = analysisResult['raw_metrics'];
-
-        if (rawMetrics is Map) {
-          cIntensity = rawMetrics['c_int_vs_lod'];
-          tIntensity = rawMetrics['t_int_vs_lod'];
-        }
-      }
+      final result = analysisResult is Map ? analysisResult : null;
+      final verdict = singleVerdict(result);
 
       buffer.writeln(
         [
@@ -117,8 +109,9 @@ class _RunTestListPageState extends State<RunTestListPage> {
           e['userId'] ?? '',
           e['sampleType'] ?? '',
           e['item'] ?? '',
-          cIntensity ?? '',
-          tIntensity ?? '',
+          singleIntensity(result, 'control'),
+          singleIntensity(result, 'test'),
+          '${verdict[0].toUpperCase()}${verdict.substring(1)}',
           imagePath.isNotEmpty ? 'images/${p.basename(imagePath)}' : '',
         ].map(_csvEscape).join(','),
       );

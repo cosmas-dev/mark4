@@ -1,8 +1,5 @@
-import 'dart:io';
-
 import 'package:flutter/material.dart';
 import 'package:mark4/dual/dual_analysis.dart';
-import 'package:mark4/single/result_single.dart';
 
 class ResultDual extends StatelessWidget {
   final String userId, sampleType, selectedItem, imagePath, shutterSpeed, ip;
@@ -55,8 +52,6 @@ class ResultDual extends StatelessWidget {
                     _summaryCard(),
                     const SizedBox(height: 16),
                     _analyteCard(),
-                    const SizedBox(height: 16),
-                    _plotCard(),
                     const SizedBox(height: 16),
                     _sampleCard(),
                   ],
@@ -145,7 +140,6 @@ class ResultDual extends StatelessWidget {
   Widget _analyteRow(String name) {
     final status =
         _hasResult ? dualAnalyteStatus(analysisResult, name) : 'invalid';
-    final multiple = dualIntensityMultiple(analysisResult, name);
 
     final String text;
     final Color color;
@@ -191,76 +185,7 @@ class ResultDual extends StatelessWidget {
               ),
             ),
           ),
-          if (multiple != null && status != 'invalid')
-            Text(
-              '×${multiple.toStringAsFixed(1)}',
-              style: const TextStyle(
-                color: _navy,
-                fontSize: 28,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
         ],
-      ),
-    );
-  }
-
-  // Dual 분석 PNG(1502x1214)에서 ROI 히트맵(제목·축·컬러바 포함) 영역 비율
-  static const _plotCropLeft = 0.027;
-  static const _plotCropTop = 0.095;
-  static const _plotCropWidth = 0.325;
-  static const _plotCropHeight = 0.435;
-  static const _imageAspect =
-      (_plotCropWidth * 1502) / (_plotCropHeight * 1214);
-
-  Widget _plotCard() {
-    final path = analysisPlotPath;
-    final hasPlot = path != null && path.isNotEmpty && File(path).existsSync();
-
-    return Container(
-      padding: const EdgeInsets.all(12),
-      decoration: _cardDecoration(22),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(16),
-        child: Row(
-          children: [
-            Expanded(
-              child: AspectRatio(
-                aspectRatio: _imageAspect,
-                child: CenterCroppedFileImage(
-                  imagePath: imagePath,
-                  cropWidthRatio: 0.08,
-                  cropHeightRatio: 0.30,
-                  cropCenterYRatio: 0.55,
-                ),
-              ),
-            ),
-            const SizedBox(width: 8),
-            Expanded(
-              child: AspectRatio(
-                aspectRatio: _imageAspect,
-                child:
-                    hasPlot
-                        ? AnalysisPlotRoiCropImage(
-                          imagePath: path,
-                          srcLeftRatio: _plotCropLeft,
-                          srcTopRatio: _plotCropTop,
-                          srcWidthRatio: _plotCropWidth,
-                          srcHeightRatio: _plotCropHeight,
-                        )
-                        : const ColoredBox(
-                          color: Colors.black,
-                          child: Center(
-                            child: Text(
-                              'No analysis plot',
-                              style: TextStyle(color: Colors.white),
-                            ),
-                          ),
-                        ),
-              ),
-            ),
-          ],
-        ),
       ),
     );
   }

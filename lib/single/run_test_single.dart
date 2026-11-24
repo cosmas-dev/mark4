@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:math';
 import 'package:flutter/material.dart';
+import 'package:window_manager/window_manager.dart';
 
 import 'package:mark4/components/current_time.dart';
 import 'package:mark4/components/select_field.dart';
@@ -379,29 +380,39 @@ class _RunTestSingleState extends State<RunTestSingle> {
     );
   }
 
-  // 화면 키보드(squeekboard)는 포커스를 얻을 때 새로 띄우고, 포커스를 잃거나 화면을 나갈 때 종료한다.
+  // 화면 키보드(squeekboard) 표시/숨김.
+  // labwc 는 전체화면 창이 있으면 키보드(layer-shell top 레이어)를 그 아래로 숨긴다.
+  // 그래서 입력하는 동안만 전체화면을 풀고(최대화) 키보드를 띄운 뒤, 입력이 끝나면 다시 전체화면으로 돌린다.
+  // 키보드 프로세스는 죽이지 않고 D-Bus(sm.puri.OSK0)로 보이기/숨기기만 한다
+  // — pkill 하면 OS 가 띄운 키보드까지 종료되고 매번 재실행되어 깜박인다.
+  static const List<String> _oskVisible = [
+    '--user', 'call', 'sm.puri.OSK0', '/sm/puri/OSK0',
+    'sm.puri.OSK0', 'SetVisible', 'b',
+  ];
+
   Future<void> _showLinuxKeyboard({bool restart = false}) async {
     if (!Platform.isLinux) return;
     try {
-      if (restart) {
-        await _hideLinuxKeyboard();
-        await Future.delayed(const Duration(milliseconds: 100));
-      } else {
-        final running = await Process.run('pgrep', ['-x', 'squeekboard']);
-        if (running.exitCode == 0) return;
+      final running = await Process.run('pgrep', ['-x', 'squeekboard']);
+      if (running.exitCode != 0) {
+        await Process.start('squeekboard', [], mode: ProcessStartMode.detached);
+        await Future.delayed(const Duration(milliseconds: 800));
       }
-      await Process.start('squeekboard', [], mode: ProcessStartMode.detached);
+      await windowManager.setFullScreen(false);
+      await windowManager.maximize();
+      await Process.run('busctl', [..._oskVisible, 'true']);
     } catch (e) {
-      debugPrint('squeekboard 실행 실패: $e');
+      debugPrint('화면 키보드 표시 실패: $e');
     }
   }
 
   Future<void> _hideLinuxKeyboard() async {
     if (!Platform.isLinux) return;
-    for (final name in ['onboard', 'matchbox-keyboard', 'squeekboard']) {
-      try {
-        await Process.run('pkill', [name]);
-      } catch (_) {}
+    try {
+      await Process.run('busctl', [..._oskVisible, 'false']);
+      await windowManager.setFullScreen(true);
+    } catch (e) {
+      debugPrint('화면 키보드 숨김 실패: $e');
     }
   }
 

@@ -15,7 +15,9 @@ String dualAnalyteStatus(Map? result, String name) {
   return analytes[name]?.toString() ?? 'invalid';
 }
 
-double? dualIntensityMultiple(Map? result, String name) {
+// 장비가 보낸 강도(intensity_fixed_scale)를 그대로 반환한다.
+// 외부공개 키트는 이 값을 보내지 않으므로 null이다.
+num? dualIntensity(Map? result, String name) {
   final strips = result?['strips'];
   if (strips is! List) return null;
   for (final s in strips) {
@@ -24,22 +26,22 @@ double? dualIntensityMultiple(Map? result, String name) {
     for (final l in lines) {
       final line = _asMap(l);
       if (line['name'] == name) {
-        final v = line['intensity_vs_threshold'];
-        return v is num ? v.toDouble() : null;
+        final v = line['intensity_fixed_scale'];
+        return v is num ? v : null;
       }
     }
   }
   return null;
 }
 
-double? dualCtrlMultiple(Map? result, String stripId) {
+num? dualCtrlIntensity(Map? result, String stripId) {
   final strips = result?['strips'];
   if (strips is! List) return null;
   for (final s in strips) {
     final strip = _asMap(s);
     if (strip['id'] == stripId) {
-      final v = _asMap(strip['control'])['intensity_vs_threshold'];
-      return v is num ? v.toDouble() : null;
+      final v = _asMap(strip['control'])['intensity_fixed_scale'];
+      return v is num ? v : null;
     }
   }
   return null;

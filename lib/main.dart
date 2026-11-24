@@ -19,6 +19,8 @@ void main() async {
     const windowOptions = WindowOptions(fullScreen: true);
 
     windowManager.waitUntilReadyToShow(windowOptions, () async {
+      // 화면 키보드 입력 중 전체화면을 해제할 때 GTK 제목 표시줄이 나타나지 않도록 숨긴다.
+      await windowManager.setTitleBarStyle(TitleBarStyle.hidden);
       await windowManager.setFullScreen(true);
       await windowManager.show();
       await windowManager.focus();
