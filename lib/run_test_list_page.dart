@@ -129,8 +129,10 @@ class _RunTestListPageState extends State<RunTestListPage> {
   String _buildCsv(List<Map<String, dynamic>> raw) =>
       showDual ? buildDualCsv(raw) : buildCsvFromRaw(raw);
 
-  /// 오래된 순으로 [csvMaxRows]개씩 나눠 CSV를 저장한다.
+  /// 오래된 순으로 [csvMaxRows]개씩 파일을 나누고, 각 파일 안에서는 최신 기록이 위로 오게 저장한다.
   /// 한 파일로 충분하면 기존 파일명 그대로, 여러 개면 _part01, _part02 ... 를 붙인다.
+  static final String _utf8Bom = String.fromCharCode(0xFEFF);
+
   Future<void> _writeCsvFiles({
     required Directory exportDir,
     required String baseName,
@@ -144,7 +146,11 @@ class _RunTestListPageState extends State<RunTestListPage> {
               ? ''
               : '_part${(i + 1).toString().padLeft(2, '0')}';
       final file = File('${exportDir.path}/$baseName$suffix.csv');
-      await file.writeAsString(_buildCsv(chunks[i]), flush: true);
+      // UTF-8 BOM: 엑셀에서 열 때 한글이 깨지지 않도록 맨 앞에 붙인다.
+      await file.writeAsString(
+        '$_utf8Bom${_buildCsv(chunks[i].reversed.toList())}',
+        flush: true,
+      );
     }
   }
 
