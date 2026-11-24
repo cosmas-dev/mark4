@@ -617,6 +617,7 @@ class _RunTestListPageState extends State<RunTestListPage> {
   Future<void> _copyImagesToUsb({
     required List<Map<String, dynamic>> rawRows,
     required Directory exportDir,
+    void Function(int done, int total)? onProgress,
   }) async {
     final imageDir = Directory('${exportDir.path}/images');
 
@@ -655,9 +656,112 @@ class _RunTestListPageState extends State<RunTestListPage> {
       }
     }
 
-    for (final e in rawRows) {
-      await copyOne(e['imagePath']?.toString());
+    final total = rawRows.length;
+    for (var i = 0; i < total; i++) {
+      await copyOne(rawRows[i]['imagePath']?.toString());
+      onProgress?.call(i + 1, total);
     }
+  }
+
+  // ---------------- USB 저장 진행 팝업 ----------------
+
+  /// USB 저장처럼 오래 걸리는 작업 동안 화면 전체를 막고 진행 상황을 보여준다.
+  /// 작업이 끝나거나 실패하면 팝업을 닫는다. 성공하면 true.
+  Future<bool> _runWithSaveProgress(
+    Future<void> Function(ValueNotifier<_SaveProgress> progress) task,
+  ) async {
+    final progress = ValueNotifier<_SaveProgress>(
+      const _SaveProgress('Saving CSV...', 0, 0),
+    );
+
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      barrierColor: Colors.black.withOpacity(0.4),
+      builder:
+          (_) => PopScope(
+            canPop: false,
+            child: Center(
+              child: Container(
+                width: 420,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 24,
+                  vertical: 28,
+                ),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: ValueListenableBuilder<_SaveProgress>(
+                  valueListenable: progress,
+                  builder: (_, v, __) {
+                    return Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Text(
+                          'Saving to USB',
+                          style: TextStyle(
+                            fontSize: 22,
+                            fontWeight: FontWeight.bold,
+                            color: Color(0xFF1A2A4A),
+                            decoration: TextDecoration.none,
+                          ),
+                        ),
+                        const SizedBox(height: 20),
+                        ClipRRect(
+                          borderRadius: BorderRadius.circular(8),
+                          child: LinearProgressIndicator(
+                            // total이 0이면 진행률을 알 수 없으므로 무한 로딩바로 표시
+                            value: v.total == 0 ? null : v.done / v.total,
+                            minHeight: 14,
+                            backgroundColor: const Color(0xFFE3E9F0),
+                            color: const Color(0xFF22B8D6),
+                          ),
+                        ),
+                        const SizedBox(height: 14),
+                        Text(
+                          v.total == 0
+                              ? v.label
+                              : '${v.label} ${v.done} / ${v.total}',
+                          style: const TextStyle(
+                            fontSize: 16,
+                            color: Color(0xFF1A2A4A),
+                            decoration: TextDecoration.none,
+                            fontWeight: FontWeight.normal,
+                          ),
+                        ),
+                        const SizedBox(height: 10),
+                        const Text(
+                          'Please do not remove the USB.',
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: Color(0xFFE83C3C),
+                            decoration: TextDecoration.none,
+                            fontWeight: FontWeight.normal,
+                          ),
+                        ),
+                      ],
+                    );
+                  },
+                ),
+              ),
+            ),
+          ),
+    );
+
+    var ok = true;
+    try {
+      await task(progress);
+    } catch (e) {
+      ok = false;
+      debugPrint('USB 저장 실패: $e');
+    }
+
+    if (mounted) Navigator.of(context).pop(); // 진행 팝업 닫기
+    progress.dispose();
+
+    if (!ok) _showSnack('Save failed. Check the USB and try again.');
+    return ok;
   }
 
   // ---------------- USB 전체 저장 ----------------
@@ -708,16 +812,24 @@ class _RunTestListPageState extends State<RunTestListPage> {
       await exportDir.create(recursive: true);
     }
 
-    await _writeCsvFiles(
-      exportDir: exportDir,
-      baseName:
-          'test_${showDual ? 'DUAL_' : ''}ALL_${DateTime.now().millisecondsSinceEpoch}',
-      raw: raw,
-    );
+    final ok = await _runWithSaveProgress((progress) async {
+      await _writeCsvFiles(
+        exportDir: exportDir,
+        baseName:
+            'test_${showDual ? 'DUAL_' : ''}ALL_${DateTime.now().millisecondsSinceEpoch}',
+        raw: raw,
+      );
 
-    await _copyImagesToUsb(rawRows: raw, exportDir: exportDir);
+      await _copyImagesToUsb(
+        rawRows: raw,
+        exportDir: exportDir,
+        onProgress:
+            (done, total) =>
+                progress.value = _SaveProgress('Copying images', done, total),
+      );
+    });
 
-    _showSaveCompletedDialog();
+    if (ok && mounted) _showSaveCompletedDialog();
   }
 
   void _confirmExportAll() {
@@ -889,14 +1001,24 @@ class _RunTestListPageState extends State<RunTestListPage> {
       await exportDir.create(recursive: true);
     }
 
-    await _writeCsvFiles(
-      exportDir: exportDir,
-      baseName:
-          'test_${showDual ? 'DUAL_' : ''}SELECTED_${DateTime.now().millisecondsSinceEpoch}',
-      raw: selectedRaw,
-    );
+    final ok = await _runWithSaveProgress((progress) async {
+      await _writeCsvFiles(
+        exportDir: exportDir,
+        baseName:
+            'test_${showDual ? 'DUAL_' : ''}SELECTED_${DateTime.now().millisecondsSinceEpoch}',
+        raw: selectedRaw,
+      );
 
-    await _copyImagesToUsb(rawRows: selectedRaw, exportDir: exportDir);
+      await _copyImagesToUsb(
+        rawRows: selectedRaw,
+        exportDir: exportDir,
+        onProgress:
+            (done, total) =>
+                progress.value = _SaveProgress('Copying images', done, total),
+      );
+    });
+
+    if (!ok || !mounted) return;
 
     _clearSelection();
 
@@ -1152,4 +1274,11 @@ class _Cell extends StatelessWidget {
       ),
     );
   }
+}
+
+class _SaveProgress {
+  final String label;
+  final int done;
+  final int total;
+  const _SaveProgress(this.label, this.done, this.total);
 }
